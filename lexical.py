@@ -1,4 +1,5 @@
 import re
+from symbol_table import *
 
 
 class TokenType:
@@ -45,36 +46,36 @@ class Token:
 class RegexTable:
     """Token 正则表达式表"""
     __token_regex = [
-        r'',                        # 0 空格
-        r'',                        # 1 else
-        r'',                        # 2 if
-        r'',                        # 3 int
-        r'',                        # 4 return
-        r'',                        # 5 void
-        r'',                        # 6 while
-        r'',                        # 7 +
-        r'',                        # 8 -
-        r'',                        # 9 *
-        r'',                        # 10 /
-        r'',                        # 11 >
-        r'',                        # 12 >=
-        r'',                        # 13 <
-        r'',                        # 14 <=
-        r'',                        # 15 ==
-        r'',                        # 16 !=
-        r'',                        # 17 =
-        r'',                        # 18 ;
-        r'',                        # 19 ,
-        r'',                        # 20 (
-        r'',                        # 21 )
-        r'',                        # 22 [
-        r'',                        # 23 ]
-        r'',                        # 24 {
-        r'',                        # 25 }
+        r' +',                     # 0 空格
+        r'else',                    # 1 else
+        r'if',                      # 2 if
+        r'int',                     # 3 int
+        r'return',                  # 4 return
+        r'void',                    # 5 void
+        r'while',                   # 6 while
+        r'\+',                      # 7 +
+        r'-',                       # 8 -
+        r'\*',                      # 9 *
+        r'/',                       # 10 /
+        r'>',                       # 11 >
+        r'>=',                      # 12 >=
+        r'<',                       # 13 <
+        r'<=',                      # 14 <=
+        r'==',                      # 15 ==
+        r'!=',                      # 16 !=
+        r'=',                       # 17 =
+        r';',                       # 18 ;
+        r',',                       # 19 ,
+        r'\(',                      # 20 (
+        r'\)',                      # 21 )
+        r'\[',                      # 22 [
+        r'\]',                      # 23 ]
+        r'\{',                      # 24 {
+        r'\}',                      # 25 }
         r'/\*',                     # 26 /*
         r'\*/',                     # 27 */
-        r'',                        # 28 标识符
-        r''                         # 29 数字
+        r'[a-zA-Z][a-zA-Z]*',       # 28 标识符
+        r'[1-9][0-9]*|0'            # 29 数字
     ]
 
     @classmethod
@@ -96,11 +97,16 @@ class Lexical:
         self.__error = ''
         self.__source = source
         self.__tokens = list()
+        self.__symbol_table = None
 
     def put_source(self, source):
         self.__source = source
 
+    def put_symbol_table(self, symbol_table):
+        self.__symbol_table = symbol_table
+
     def __del_useless_char(self):
+        self.__source = self.__source.replace('\\', ' ')
         self.__source = self.__source.replace('\r', ' ')
         self.__source = self.__source.replace('\n', ' ')
         self.__source = self.__source.replace('\t', ' ')
@@ -125,13 +131,13 @@ class Lexical:
             # 先匹配 /*
             match = RegexTable.get_regex_instance(TokenType.LEFT_NOTE).search(buffer)
             # 如果匹配到了
-            left_note_start = buffer_start + match.start()
             if match:
+                left_note_start = buffer_start + match.start()
                 # 开始匹配 */
                 match2 = RegexTable.get_regex_instance(TokenType.RIGHT_NOTE).search(buffer)
                 # 如果匹配到了
                 if match2:
-                    right_note_end = buffer_start + match.end()
+                    right_note_end = buffer_start + match2.end()
                     # 执行删除
                     result = result.replace(self.__source[left_note_start:right_note_end], '')
                     # 删除完了之后进入下次循环
@@ -151,6 +157,7 @@ class Lexical:
                     return False
                 else:
                     break
+        self.__source = result
         return True
 
     def __split_token(self):
@@ -168,6 +175,13 @@ class Lexical:
                 match = RegexTable.get_regex_instance(i).match(buffer)
                 # 如果匹配到了
                 if match:
+                    # 如果匹配到的是 id，则将其添加到符号表
+                    if i == TokenType.ID:
+                        # 如果添加失败，说明肯定是重复了
+                        if not self.__symbol_table.add(match.group(0)):
+                            self.__error = '重复的标识符' + match.group(0)
+                            return False
+
                     self.__tokens.append(Token(i, match.group(0)))
                     # 更新缓冲区剩余字符
                     buffer = buffer[match.end():len(buffer) - 1]
@@ -178,25 +192,38 @@ class Lexical:
                 else:
                     continue
 
-            # 如果匹配到了 Token，则继续匹配，如果没有匹配到，则说明失败了
+            # 如果没有匹配到，则说明失败了
             if not token_match:
                 if len(buffer) < 5:
                     self.__error = '词法错误,在程序末尾'
                 else:
-                    self.__error = '词法错误' + '\''+ buffer[0:5] + '\''
+                    self.__error = '词法错误' + '\'' + buffer[0:5] + '\''
                 return False
+        return True
+
+    def __del_spaces(self):
+        new_tokens = list()
+        for token in self.__tokens:
+            # 如果不是空格就添加到新的 token 列表中
+            if token.type != TokenType.SPACE:
+                new_tokens.append(token)
+
+        # 最后把老的 token 列表替换成新的 token 列表
+        self.__tokens.clear()
+        for token in new_tokens:
+            self.__tokens.append(token)
 
     def __pre_deal(self):
         if self.__del_useless_char():
-            if self.__del_notes():
-                return True
-            else:
-                return False
+            return self.__del_notes()
         else:
             return False
 
     def __deal(self):
-        return self.__split_token()
+        if self.__split_token():
+            return self.__del_spaces()
+        else:
+            return False
 
     def execute(self):
         if self.__pre_deal():
@@ -210,6 +237,5 @@ class Lexical:
     def get_error(self):
         return self.__error
 
-
-lexical = Lexical(open('test.c').read())
-lexical.execute()
+    def get_result(self):
+        return self.__tokens

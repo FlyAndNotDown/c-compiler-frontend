@@ -1,5 +1,4 @@
-/* A program to perform Euclid's
-Algorithm to compute gcd. */
+/* A program to perform Euclid's Algorithm to compute gcd. */
 int gcd(int u, int v) {
     if (v == 0)
         return u;
