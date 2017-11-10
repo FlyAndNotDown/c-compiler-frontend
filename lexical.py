@@ -93,9 +93,9 @@ class RegexTable:
 
 class Lexical:
     """词法分析器"""
-    def __init__(self, source=''):
+    def __init__(self):
         self.__error = ''
-        self.__source = source
+        self.__source = ''
         self.__tokens = list()
         self.__symbol_table = None
 
