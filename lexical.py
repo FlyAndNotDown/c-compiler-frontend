@@ -3,7 +3,9 @@ from symbol_table import *
 
 
 class TokenType:
-    """Token 的类型"""
+    """
+    Token 的类型
+    """
     SPACE = 0                   # 空格
     ELSE = 1                    # else
     IF = 2                      # if
@@ -18,7 +20,7 @@ class TokenType:
     BIGGER = 11                 # >
     BIGGER_EQUAL = 12           # >=
     SMALLER = 13                # <
-    SMALLER_EQUAL = 14          # <=
+    SMALL_EQUAL = 14            # <=
     EQUAL = 15                  # ==
     NOT_EQUAL = 16              # !=
     EVALUATE = 17               # =
@@ -30,23 +32,33 @@ class TokenType:
     RIGHT_BRACKET = 23          # ]
     LEFT_BRACE = 24             # {
     RIGHT_BRACE = 25            # }
-    LEFT_NOTE = 26              # /*
-    RIGHT_NOTE = 27             # */
-    ID = 28                     # 标识符
-    NUM = 29                    # 数字
+    ID = 26                     # 标识符
+    NUM = 27                    # 数字
+    LEFT_NOTE = 28              # /*
+    RIGHT_NOTE = 29             # */
+    NONE = -1                   # 空
 
 
 class Token:
-    """Token"""
-    def __init__(self, kind=TokenType.SPACE, string=''):
-        self.type = kind
-        self.str = string
+    """
+    Token
+    """
+    def __init__(self, token_type=TokenType.NONE, token_str=''):
+        """
+        构造
+        :param token_type: Token 的类型
+        :param token_str: Token 的内容
+        """
+        self.type = token_type
+        self.str = token_str
 
 
 class RegexTable:
-    """Token 正则表达式表"""
+    """
+    正则表达式表
+    """
     __token_regex = [
-        r' +',                     # 0 空格
+        r' +',                      # 0 空格
         r'else',                    # 1 else
         r'if',                      # 2 if
         r'int',                     # 3 int
@@ -72,170 +84,176 @@ class RegexTable:
         r'\]',                      # 23 ]
         r'\{',                      # 24 {
         r'\}',                      # 25 }
-        r'/\*',                     # 26 /*
-        r'\*/',                     # 27 */
-        r'[a-zA-Z][a-zA-Z]*',       # 28 标识符
-        r'[1-9][0-9]*|0'            # 29 数字
+        r'[a-zA-Z][a-zA-Z]*',       # 26 标识符
+        r'[1-9][0-9]*|0',           # 27 数字
+        r'/\*',                     # 28 /*
+        r'\*/',                     # 29 */
     ]
 
     @classmethod
-    def get_regex(cls, kind):
-        return cls.__token_regex[kind]
+    def get_len(cls):
+        """
+        获取正则表达式表中正常正则表达式的数量
+        :return: 正则表达式表中正常正则表达式的数量
+        """
+        return len(cls.__token_regex) - 2
 
     @classmethod
-    def get_regex_instance(cls, kind):
-        return re.compile(cls.__token_regex[kind])
+    def get_regex(cls, token_type):
+        """
+        获取编译好的正常正则表达式
+        :param token_type: token 的类型
+        :return: 编译好的正则表达式
+        """
+        if 0 <= token_type < cls.get_len():
+            return re.compile(cls.__token_regex[token_type])
+        else:
+            return None
 
     @classmethod
-    def get_num(cls):
-        return len(cls.__token_regex)
+    def get_special_regex(cls, token_type):
+        """
+        获取正则表达式表中的特殊正则表达式 (尤指注释符号)
+        :param token_type: token 的类型
+        :return: 编译好的正则表达式
+        """
+        if cls.get_len() <= token_type < cls.get_len() + 2:
+            return re.compile(cls.__token_regex[token_type])
+        else:
+            return None
+
+
+class Error:
+    """
+    错误
+    """
+    def __init__(self, reason='', line=-1):
+        """
+        构造
+        :param reason: 错误原因
+        :param line: 错误发生的行数
+        """
+        self.reason = reason
+        self.line = line
 
 
 class Lexical:
-    """词法分析器"""
+    """
+    词法分析器
+    """
     def __init__(self):
-        self.__error = ''
+        """
+        构造
+        """
+        self.__error = None
         self.__source = ''
+        self.__lines = list()
         self.__tokens = list()
-        self.__symbol_table = None
+        self.__symbol_table = SymbolTable()
 
     def put_source(self, source):
+        """
+        装载源代码
+        :param source: 源代码
+        """
         self.__source = source
 
-    def put_symbol_table(self, symbol_table):
-        self.__symbol_table = symbol_table
+    def execute(self):
+        self.__replace_useless_chars()
+        if self.__del_notes():
+            return True
+        else:
+            return False
 
-    def __del_useless_char(self):
-        self.__source = self.__source.replace('\\', ' ')
-        self.__source = self.__source.replace('\r', ' ')
-        self.__source = self.__source.replace('\n', ' ')
-        self.__source = self.__source.replace('\t', ' ')
-        return True
+    def __replace_useless_chars(self):
+        """
+        替换无用的字符
+        """
+        # 将 \r 替换成 \n
+        self.__source = self.__source.replace('\r', '\n')
+        # 将 \t 替换成四个空格
+        self.__source = self.__source.replace('\t', '    ')
 
     def __del_notes(self):
-        # 计数器，用来确认注释开始符和注释结束符号的数量是否匹配
-        note_symbol_count = 0
+        # 计数器，用来确认注释开始符和注释结束符的数量是否相等
+        note_count = 0
         # 缓冲区
         buffer = self.__source
         # 结果
         result = self.__source
-        # 当前缓冲区的开头字符在 source 中的位置
-        buffer_start = 0
 
-        # 开始匹配
+        # 判断是否匹配到了末尾
         while True:
-            # 判断是否已经到了末尾，如果到了末尾直接跳出
-            if buffer_start >= len(self.__source):
-                break
-
-            # 先匹配 /*
-            match = RegexTable.get_regex_instance(TokenType.LEFT_NOTE).search(buffer)
+            # 尝试匹配 */
+            match = RegexTable.get_special_regex(TokenType.LEFT_NOTE).search(buffer)
             # 如果匹配到了
             if match:
-                left_note_start = buffer_start + match.start()
+                left_note_start = match.start()
                 # 开始匹配 */
-                match2 = RegexTable.get_regex_instance(TokenType.RIGHT_NOTE).search(buffer)
+                match2 = RegexTable.get_special_regex(TokenType.RIGHT_NOTE).search(buffer)
                 # 如果匹配到了
                 if match2:
-                    right_note_end = buffer_start + match2.end()
+                    right_note_end = match2.end()
+                    # 判断匹配到的区间中有几行
+                    line_count = result[left_note_start:right_note_end].count('\n')
                     # 执行删除
-                    result = result.replace(self.__source[left_note_start:right_note_end], '')
-                    # 删除完了之后进入下次循环
-                    buffer_start_old = buffer_start
-                    buffer_start = right_note_end
-                    buffer = buffer[buffer_start - buffer_start_old:len(buffer) - 1]
+                    result = result.replace(result[left_note_start:right_note_end], '\n' * line_count)
+                    # 删除完毕之后进入下一次循环
+                    buffer = result
                     continue
                 # 如果没有匹配到，说明两者数量不匹配，报错
                 else:
-                    self.__error = '多余的注释符'
+                    # 判断错误所在的行数
+                    enter_location = list()
+                    enter_location.append(0)
+                    for i in range(0, len(result) - 1):
+                        if result[i] == '\n':
+                            enter_location.append(i)
+                    find = False
+
+                    error_line = 0
+                    for i in range(0, len(enter_location) - 2):
+                        if enter_location[i] < left_note_start < enter_location[i + 1]:
+                            error_line = i + 1
+                            find = True
+                            break
+                    if not find:
+                        error_line = len(enter_location)
+
+                    # 报错
+                    self.__error = Error('/* 没有相匹配的 */', error_line)
                     return False
-            # 如果没匹配到就寻找有没有多余的 */
+            # 如果没有匹配到
             else:
-                match2 = RegexTable.get_regex_instance(TokenType.RIGHT_NOTE).search(buffer)
+                # 尝试寻找有没有落单的 */
+                match2 = RegexTable.get_special_regex(TokenType.RIGHT_NOTE).search(buffer)
+                # 如果找到了说明错误了
                 if match2:
-                    self.__error = '多余的注释结束符'
+                    right_note_start = match2.start()
+                    # 判断错误所在的行数
+                    enter_location = list()
+                    enter_location.append(0)
+                    for i in range(0, len(result) - 1):
+                        if result[i] == '\n':
+                            enter_location.append(i)
+                    find = False
+
+                    error_line = 0
+                    for i in range(0, len(enter_location) - 2):
+                        if enter_location[i] < right_note_start < enter_location[i + 1]:
+                            error_line = i + 1
+                            find = True
+                            break
+                    if not find:
+                        error_line = len(enter_location)
+
+                    # 报错
+                    self.__error = Error('多余的 */', error_line)
                     return False
+                # 如果没有找到那就说明已经找完了，跳出
                 else:
                     break
+
+        # 将 result 保存到 __source 中
         self.__source = result
         return True
-
-    def __split_token(self):
-        # 建立缓冲区
-        buffer = self.__source
-        # 是否成功
-        success = False
-
-        # 当缓冲区还存在数据的时候，不断进行循环匹配
-        while len(buffer) > 0:
-            # 当前循环是否成功匹配到 Token
-            token_match = False
-            # 在正则表达式表中尝试所有的正则表达式进行匹配
-            for i in range(0, RegexTable.get_num()):
-                match = RegexTable.get_regex_instance(i).match(buffer)
-                # 如果匹配到了
-                if match:
-                    # 如果匹配到的是 id，则将其添加到符号表
-                    if i == TokenType.ID:
-                        # 如果添加失败，说明肯定是重复了
-                        if not self.__symbol_table.add(match.group(0)):
-                            self.__error = '重复的标识符' + match.group(0)
-                            return False
-
-                    self.__tokens.append(Token(i, match.group(0)))
-                    # 更新缓冲区剩余字符
-                    buffer = buffer[match.end():len(buffer) - 1]
-                    # 更新 token_match
-                    token_match = True
-                    break
-                # 如果没有匹配到
-                else:
-                    continue
-
-            # 如果没有匹配到，则说明失败了
-            if not token_match:
-                if len(buffer) < 5:
-                    self.__error = '词法错误,在程序末尾'
-                else:
-                    self.__error = '词法错误' + '\'' + buffer[0:5] + '\''
-                return False
-        return True
-
-    def __del_spaces(self):
-        new_tokens = list()
-        for token in self.__tokens:
-            # 如果不是空格就添加到新的 token 列表中
-            if token.type != TokenType.SPACE:
-                new_tokens.append(token)
-
-        # 最后把老的 token 列表替换成新的 token 列表
-        self.__tokens.clear()
-        for token in new_tokens:
-            self.__tokens.append(token)
-
-    def __pre_deal(self):
-        if self.__del_useless_char():
-            return self.__del_notes()
-        else:
-            return False
-
-    def __deal(self):
-        if self.__split_token():
-            return self.__del_spaces()
-        else:
-            return False
-
-    def execute(self):
-        if self.__pre_deal():
-            if self.__deal():
-                return True
-            else:
-                return False
-        else:
-            return False
-
-    def get_error(self):
-        return self.__error
-
-    def get_result(self):
-        return self.__tokens

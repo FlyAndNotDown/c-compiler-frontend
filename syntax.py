@@ -1,4 +1,4 @@
-from lexical import *
+from lexical_old import *
 from symbol_table import *
 
 
