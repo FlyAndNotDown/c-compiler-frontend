@@ -1,3 +1,8 @@
+"""
+词法分析相关
+"""
+
+
 import re
 from symbol_table import *
 

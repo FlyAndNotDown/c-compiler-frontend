@@ -1,6 +1,6 @@
 import re
 
 
-l = [1]
-x = l[1:]
-print(x)
+l = [0, 1, 2, None, None, 5]
+print(l)
+print(l[4])
