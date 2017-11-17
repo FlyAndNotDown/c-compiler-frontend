@@ -168,7 +168,7 @@ class TerminalSign(Sign):
     """
     终结符
     """
-    def __init__(self, terminal_sign_type, terminal_sign_str, terminal_sign_line):
+    def __init__(self, terminal_sign_type, terminal_sign_str='', terminal_sign_line=-1):
         """
         构造
         :param terminal_sign_type: 终结符的类型
@@ -271,7 +271,158 @@ class Grammar:
     文法
     """
     __productions = [
-        # TODO
+        # <0> 1. programs -> declaration-list
+        Production(
+            NonTerminalSign(NonTerminalSignType.PROGRAMS), [
+                NonTerminalSign(NonTerminalSignType.DECLARATION_LIST)
+            ]
+        ),
+        # <1> 2(1). declaration-list -> declaration declaration-list2
+        Production(
+            NonTerminalSign(NonTerminalSignType.DECLARATION_LIST), [
+                NonTerminalSign(NonTerminalSignType.DEClARATION),
+                NonTerminalSign(NonTerminalSignType.DECLARATION_LIST2)
+            ]
+        ),
+        # <2> 2(2). declaration-list2 -> declaration declaration-list2 | empty
+        Production(
+            NonTerminalSign(NonTerminalSignType.DECLARATION_LIST2), [
+                NonTerminalSign(NonTerminalSignType.DEClARATION),
+                NonTerminalSign(NonTerminalSignType.DECLARATION_LIST2)
+            ]
+        ),
+        # <3>
+        Production(
+            NonTerminalSign(NonTerminalSignType.DECLARATION_LIST2), [
+
+            ]
+        ),
+        # <4> 3. declaration -> var-declaration | fun-declaration
+        Production(
+            NonTerminalSign(NonTerminalSignType.DEClARATION), [
+                NonTerminalSign(NonTerminalSignType.VAR_DECLARATION)
+            ]
+        ),
+        # <5>
+        Production(
+            NonTerminalSign(NonTerminalSignType.DEClARATION), [
+                NonTerminalSign(NonTerminalSign(NonTerminalSignType.FUN_DECLARATION))
+            ]
+        ),
+        # <6> 4(1). var-declaration -> type-specifier ID var-declaration2
+        Production(
+            NonTerminalSign(NonTerminalSignType.VAR_DECLARATION), [
+                NonTerminalSign(NonTerminalSignType.TYPE_SPECIDIER),
+                TerminalSign(TerminalSignType.ID),
+                NonTerminalSign(NonTerminalSignType.VAR_DECLARATION2)
+            ]
+        ),
+        # <7> 4(2). var-declaration2 -> ; | [ NUM ] ;
+        Production(
+            NonTerminalSign(NonTerminalSignType.VAR_DECLARATION2), [
+                TerminalSign(TerminalSignType.SEMICOLON)
+            ]
+        ),
+        # <8>
+        Production(
+            NonTerminalSign(NonTerminalSignType.VAR_DECLARATION2), [
+                TerminalSign(TerminalSignType.LEFT_BRACKET),
+                TerminalSign(TerminalSignType.NUM),
+                TerminalSign(TerminalSignType.RIGHT_BRACKET),
+                TerminalSign(TerminalSignType.SEMICOLON)
+            ]
+        ),
+        # <9> 5. type-specifier -> int | void
+        Production(
+            NonTerminalSign(NonTerminalSignType.TYPE_SPECIDIER), [
+                TerminalSign(TerminalSignType.INT)
+            ]
+        ),
+        # <10>
+        Production(
+            NonTerminalSign(NonTerminalSignType.TYPE_SPECIDIER), [
+                TerminalSign(TerminalSignType.VOID)
+            ]
+        ),
+        # <11> 6. fun-declaration -> type-specifier ID ( params ) | compound-stmt
+        Production(
+            NonTerminalSign(NonTerminalSignType.FUN_DECLARATION), [
+                NonTerminalSign(NonTerminalSignType.TYPE_SPECIDIER),
+                TerminalSign(TerminalSignType.ID),
+                TerminalSign(TerminalSignType.LEFT_PARENTHESES),
+                NonTerminalSign(NonTerminalSignType.PARAMS),
+                TerminalSign(TerminalSignType.RIGHT_PARENTHESES)
+            ]
+        ),
+        # <12>
+        Production(
+            NonTerminalSign(NonTerminalSignType.FUN_DECLARATION), [
+                NonTerminalSign(NonTerminalSignType.COMPOUND_STMT)
+            ]
+        ),
+        # <13> 7. params -> params-list | void
+        Production(
+            NonTerminalSign(NonTerminalSignType.PARAMS), [
+                NonTerminalSign(NonTerminalSignType.PARAM_LIST)
+            ]
+        ),
+        # <14>
+        Production(
+            NonTerminalSign(NonTerminalSignType.PARAMS), [
+                TerminalSign(TerminalSignType.VOID)
+            ]
+        ),
+        # <15> 8(1). param-list -> param param-list2
+        Production(
+            NonTerminalSign(NonTerminalSignType.PARAM_LIST), [
+                NonTerminalSign(NonTerminalSignType.PARAM),
+                NonTerminalSign(NonTerminalSignType.PARAM_LIST2)
+            ]
+        ),
+        # <16> 8(2). param-list2 -> param-list , param-list2 | empty
+        Production(
+            NonTerminalSign(NonTerminalSignType.PARAM_LIST2), [
+                NonTerminalSign(NonTerminalSignType.PARAM_LIST),
+                TerminalSign(TerminalSignType.COMMA),
+                NonTerminalSign(NonTerminalSignType.PARAM_LIST2)
+            ]
+        ),
+        # <17>
+        Production(
+            NonTerminalSign(NonTerminalSignType.PARAM_LIST2), [
+
+            ]
+        ),
+        # <18> 9(1). param -> type-specifier ID param2
+        Production(
+            NonTerminalSign(NonTerminalSignType.PARAM), [
+                NonTerminalSign(NonTerminalSignType.TYPE_SPECIDIER),
+                TerminalSign(TerminalSignType.ID),
+                NonTerminalSign(NonTerminalSignType.PARAM2)
+            ]
+        ),
+        # <19> 9(2). param2 -> [ ] | empty
+        Production(
+            NonTerminalSign(NonTerminalSignType.PARAM2), [
+                TerminalSign(TerminalSignType.LEFT_BRACKET),
+                TerminalSign(TerminalSignType.RIGHT_BRACKET)
+            ]
+        ),
+        # <20>
+        Production(
+            NonTerminalSign(NonTerminalSignType.PARAM2), [
+
+            ]
+        ),
+        # <21> 10. compound-stmt -> { local-declaration statement-list }
+        Production(
+            NonTerminalSign(NonTerminalSignType.COMPOUND_STMT), [
+                TerminalSign(TerminalSignType.LEFT_BRACE),
+                NonTerminalSign(NonTerminalSignType.LOCAL_DECLARATION),
+                NonTerminalSign(NonTerminalSignType.STATEMENT_LIST),
+                TerminalSign(TerminalSignType.RIGHT_BRACE)
+            ]
+        )
     ]
 
     @classmethod
