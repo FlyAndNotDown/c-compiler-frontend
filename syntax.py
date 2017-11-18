@@ -1118,11 +1118,76 @@ class PredictingAnalysisTable:
                             if bigger:
                                 flag = True
 
+    def __insert_to_table(self, production, terminal):
+        """
+        将产生式插入预测分析表
+        :param non_terminal: 非终结符
+        :param terminal: 终结符
+        """
+        # 先判断应该插入到的位置
+        x = 0
+        y = 0
+        for i in range(0, len(self.__non_terminal_signs)):
+            if production.get_left().type == self.__non_terminal_signs[i].type:
+                x = i
+                break
+        for i in range(0, len(self.__terminal_signs)):
+            if terminal.type == self.__terminal_signs[i].type:
+                y = i
+
+        # 执行插入
+        del self.__table[x][y]
+        self.__table[x].insert(y, production)
+
     def __generate_table(self):
         """
         根据 first 集和 follow 集构建预测分析表
         """
-        # TODO 构建预测分析表
+        # 对文法中的每一个产生式 A->a 执行如下操作
+        for production in Grammar.productions:
+            # 如果产生式右边不为空
+            if len(production.get_right()) > 0:
+                # 如果产生式首位是终结符
+                if production.get_right()[0] is TerminalSign:
+                    # first 集就是他本身，将其添加到 M[A,a] 中
+                    self.__insert_to_table(production, production.get_right()[0])
+                # 如果产生式首位是非终结符
+                else:
+                    # 求产生式右边的 first 集
+                    index = 0
+                    for i in range(0, len(self.__non_terminal_signs)):
+                        if production.get_right()[0].type == self.__non_terminal_signs[i].type:
+                            index = i
+                            break
+                    # 将这个 first 集中的所有非终结符添加到 M[A,a] 中去
+                    for i in range(0, len(self.__firsts[index])):
+                        if self.__firsts[index][i].type != TerminalSignType.EMPTY:
+                            self.__insert_to_table(production, self.__firsts[index][i])
+
+                    # 另外，如果这个 first 集中包括空字，那么对于 b in follow(A)，把 A->a 添加到 M[A,b] 中去
+                    # 先寻找 A 的 follow 集
+                    a_index = 0
+                    for i in range(0, len(self.__non_terminal_signs)):
+                        if self.__non_terminal_signs[i].type == production.get_left().type:
+                            a_index = i
+                            break
+                    # 执行操作
+                    for i in range(0, len(self.__follows[a_index])):
+                        if self.__follows[a_index][i].type != TerminalSignType.EMPTY:
+                            self.__insert_to_table(production, self.__follows[a_index][i])
+            # 如果产生式右边为空
+            else:
+                # 对于 b in follow(A)，把 A->a 添加到 M[A,b] 中
+                # 先寻找 A 的 follow 集
+                a_index = 0
+                for i in range(0, len(self.__non_terminal_signs)):
+                    if self.__non_terminal_signs[i].type == production.get_left().type:
+                        a_index = i
+                        break
+                # 执行操作
+                for i in range(0, len(self.__follows[a_index])):
+                    if self.__follows[a_index][i].type != TerminalSignType.EMPTY:
+                        self.__insert_to_table(production, self.__follows[a_index][i])
 
     def get_production(self, non_terminal_sign, terminal_sign):
         """
