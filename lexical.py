@@ -25,7 +25,7 @@ class TokenType:
     BIGGER = 11                 # >
     BIGGER_EQUAL = 12           # >=
     SMALLER = 13                # <
-    SMALL_EQUAL = 14            # <=
+    SMALLER_EQUAL = 14          # <=
     EQUAL = 15                  # ==
     NOT_EQUAL = 16              # !=
     EVALUATE = 17               # =
