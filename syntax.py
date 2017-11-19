@@ -264,6 +264,7 @@ class Production:
         获取产生式的左边
         :return: 产生式的左边
         """
+        return self.__left
 
     def get_right(self):
         """
@@ -780,6 +781,7 @@ class Grammar:
             ]
         )
     ]
+    start = NonTerminalSign(NonTerminalSignType.PROGRAMS)
 
 
 class PredictingAnalysisTable:
@@ -794,34 +796,6 @@ class PredictingAnalysisTable:
         self.__table = list()
         # 所有非终结符
         self.__non_terminal_signs = [
-            # TerminalSign(TerminalSignType.ELSE),
-            # TerminalSign(TerminalSignType.IF),
-            # TerminalSign(TerminalSignType.INT),
-            # TerminalSign(TerminalSignType.RETURN),
-            # TerminalSign(TerminalSignType.VOID),
-            # TerminalSign(TerminalSignType.WHILE),
-            # TerminalSign(TerminalSignType.ADDITION),
-            # TerminalSign(TerminalSignType.SUBTRACTION),
-            # TerminalSign(TerminalSignType.MULTIPLICATION),
-            # TerminalSign(TerminalSignType.DIVISION),
-            # TerminalSign(TerminalSignType.BIGGER),
-            # TerminalSign(TerminalSignType.BIGGER_EQUAL),
-            # TerminalSign(TerminalSignType.SMALLER),
-            # TerminalSign(TerminalSignType.SMALLER_EQUAL),
-            # TerminalSign(TerminalSignType.EQUAL),
-            # TerminalSign(TerminalSignType.NOT_EQUAL),
-            # TerminalSign(TerminalSignType.EVALUATE),
-            # TerminalSign(TerminalSignType.SEMICOLON),
-            # TerminalSign(TerminalSignType.COMMA),
-            # TerminalSign(TerminalSignType.LEFT_PARENTHESES),
-            # TerminalSign(TerminalSignType.RIGHT_PARENTHESES),
-            # TerminalSign(TerminalSignType.LEFT_BRACKET),
-            # TerminalSign(TerminalSignType.RIGHT_BRACKET),
-            # TerminalSign(TerminalSignType.LEFT_BRACE),
-            # TerminalSign(TerminalSignType.RIGHT_BRACE),
-            # TerminalSign(TerminalSignType.ID),
-            # TerminalSign(TerminalSignType.NUM),
-            # TerminalSign(TerminalSignType.POUND),
             NonTerminalSign(NonTerminalSignType.PROGRAMS),
             NonTerminalSign(NonTerminalSignType.DECLARATION_LIST),
             NonTerminalSign(NonTerminalSignType.DECLARATION_LIST2),
@@ -953,89 +927,96 @@ class PredictingAnalysisTable:
         while flag:
             # 重置 flag
             flag = False
-            # 对每一个非终结符执行如下操作
-            for i in range(0, len(self.__non_terminal_signs)):
-                # 遍历产生式
-                for production in Grammar.productions:
-                    # 如果产生式右边为空，那么则将空字添加到其 first 集中
-                    if len(production.get_right()) == 0:
-                        if self.__set_add(self.__firsts[i], TerminalSign(TerminalSignType.EMPTY)):
+            # 遍历产生式 X -> Y
+            for production in Grammar.productions:
+                # 寻找 x 在非终结符集中的位置
+                x_index = 0
+                for i in range(0, len(self.__non_terminal_signs)):
+                    if production.get_left().type == self.__non_terminal_signs[i].type:
+                        x_index = i
+                        break
+                # 如果产生式右边为空，那么则将空字添加到其 first 集中
+                if len(production.get_right()) == 0:
+                    if self.__set_add(self.__firsts[x_index], TerminalSign(TerminalSignType.EMPTY)):
+                        flag = True
+                # 如果不为空
+                else:
+                    # 如果产生式右边以终结符开头，那么将其添加到 first 集中
+                    if type(production.get_right()[0]) == TerminalSign:
+                        if self.__set_add(self.__firsts[x_index], production.get_right()[0]):
                             flag = True
-                    # 如果不为空
-                    else:
-                        # 如果产生式右边以终结符开头，那么将其添加到 first 集中
-                        if production.get_right()[0] is TerminalSign:
-                            if self.__set_add(self.__firsts[i], production.get_right()[0]):
-                                flag = True
-                        # 如果产生式右边以非终结符 Y 开头
-                        if production.get_right()[0] is NonTerminalSign:
-                            # (1) 将 first(Y) 的所有非空字元素都添加到 first 集中
-                            # 先找到 Y 的 first 集是哪一个
-                            y_index = 0
-                            for j in range(0, len(self.__non_terminal_signs)):
-                                if self.__non_terminal_signs[j].type == production.get_right()[0].type:
-                                    y_index = j
-                            # 执行添加
-                            # 该次判断中 first 集是否增大
-                            bigger = False
-                            for j in range(0, len(self.__firsts[y_index])):
-                                # 如果不是空字
-                                if self.__firsts[y_index][j].type != TerminalSignType.EMPTY:
-                                    if self.__set_add(self.__firsts[i], self.__firsts[y_index][j]):
-                                        bigger = True
-                            if bigger:
-                                flag = True
+                    # 如果产生式右边以非终结符 Y 开头
+                    if type(production.get_right()[0]) == NonTerminalSign:
+                        # (1) 将 first(Y) 的所有非空字元素都添加到 first 集中
+                        # 先找到 Y 的 first 集是哪一个
+                        y_index = 0
+                        for j in range(0, len(self.__non_terminal_signs)):
+                            if self.__non_terminal_signs[j].type == production.get_right()[0].type:
+                                y_index = j
+                        # 执行添加
+                        # 该次判断中 first 集是否增大
+                        bigger = False
+                        for j in range(0, len(self.__firsts[y_index])):
+                            # 如果不是空字
+                            if self.__firsts[y_index][j].type != TerminalSignType.EMPTY:
+                                if self.__set_add(self.__firsts[x_index], self.__firsts[y_index][j]):
+                                    bigger = True
+                        if bigger:
+                            flag = True
 
-                            # (2) 寻找产生式右侧第一个 first 集中不包含空字的非终结符
-                            # first 集中包含空字的最后一个非终结符在产生式中的索引
-                            last = -1
-                            for j in range(0, len(production.get_right())):
-                                # 首先先判断是不是非终结符
-                                if production.get_right()[j] is NonTerminalSign:
-                                    # 找到该非终结符的 first 集
-                                    index = 0
-                                    for k in range(0, len(self.__non_terminal_signs)):
-                                        if self.__non_terminal_signs[k].type == production.get_right()[j].type:
-                                            index = k
-                                    # 判断其 first 集中是否有空字
-                                    empty_find = False
-                                    for k in range(0, len(self.__firsts[index])):
-                                        if self.__firsts[index][k].type == TerminalSignType.EMPTY:
-                                            empty_find = True
-                                            break
-                                    # 如果含有空字，那么将 last 更新
-                                    if empty_find:
-                                        last = j
-                                # 如果不是直接跳出
+                        # (2) 寻找产生式右侧第一个 first 集中不包含空字的非终结符
+                        # first 集中包含空字的最后一个非终结符在产生式中的索引
+                        last = -1
+                        for j in range(0, len(production.get_right())):
+                            # 首先先判断是不是非终结符
+                            if type(production.get_right()[j]) == NonTerminalSign:
+                                # 找到该非终结符的 first 集
+                                index = 0
+                                for k in range(0, len(self.__non_terminal_signs)):
+                                    if self.__non_terminal_signs[k].type == production.get_right()[j].type:
+                                        index = k
+                                        break
+                                # 判断其 first 集中是否有空字
+                                empty_find = False
+                                for k in range(0, len(self.__firsts[index])):
+                                    if self.__firsts[index][k].type == TerminalSignType.EMPTY:
+                                        empty_find = True
+                                        break
+                                # 如果含有空字，那么将 last 更新
+                                if empty_find:
+                                    last = j
                                 else:
                                     break
-                            if last != -1:
-                                # 如果 last 后边还有元素
-                                if last < len(production.get_right()) - 1:
-                                    # 如果 last 后面是终结符
-                                    if production.get_right()[last + 1] is TerminalSign:
-                                        if self.__set_add(self.__firsts[i], production.get_right()[last + 1]):
-                                            flag = True
-                                    # 如果是非终结符
-                                    elif production.get_right()[last + 1] is NonTerminalSign:
-                                        # 先找到后面那玩意的 first 集
-                                        index = 0
-                                        for j in range(0, len(self.__non_terminal_signs)):
-                                            if self.__non_terminal_signs[j].type == production.get_right()[last + 1].type:
-                                                index = j
-                                        # 将其 first 集中的所有非空字元素添加到 first 集中
-                                        bigger = False
-                                        for j in range(0, len(self.__firsts[index])):
-                                            # 如果不是空字
-                                            if self.__firsts[index][j].type != TerminalSignType.EMPTY:
-                                                if self.__set_add(self.__firsts[i], self.__firsts[index][j]):
-                                                    bigger = True
-                                        if bigger:
-                                            flag = True
-                                # 如果 last 是最后一个元素了
-                                else:
-                                    if self.__set_add(self.__firsts[i], TerminalSign(TerminalSignType.EMPTY)):
+                            # 如果不是直接跳出
+                            else:
+                                break
+                        if last != -1:
+                            # 如果 last 后边还有元素
+                            if last < len(production.get_right()) - 1:
+                                # 如果 last 后面是终结符
+                                if type(production.get_right()[last + 1]) == TerminalSign:
+                                    if self.__set_add(self.__firsts[x_index], production.get_right()[last + 1]):
                                         flag = True
+                                # 如果是非终结符
+                                elif type(production.get_right()[last + 1]) == NonTerminalSign:
+                                    # 先找到后面那玩意的 first 集
+                                    index = 0
+                                    for j in range(0, len(self.__non_terminal_signs)):
+                                        if self.__non_terminal_signs[j].type == production.get_right()[last + 1].type:
+                                            index = j
+                                    # 将其 first 集中的所有非空字元素添加到 first 集中
+                                    bigger = False
+                                    for j in range(0, len(self.__firsts[index])):
+                                        # 如果不是空字
+                                        if self.__firsts[index][j].type != TerminalSignType.EMPTY:
+                                            if self.__set_add(self.__firsts[x_index], self.__firsts[index][j]):
+                                                bigger = True
+                                    if bigger:
+                                        flag = True
+                            # 如果 last 是最后一个元素了
+                            else:
+                                if self.__set_add(self.__firsts[x_index], TerminalSign(TerminalSignType.EMPTY)):
+                                    flag = True
 
     def __get_follows(self):
         """
@@ -1046,77 +1027,78 @@ class PredictingAnalysisTable:
         while flag:
             # 重置 flag
             flag = False
-            # 对每一个非终结符 X 执行如下操作
-            for i in range(0, len(self.__non_terminal_signs)):
-                # 如果 X 是文法的开始符号，那么则将 # 至于其 follow 集中
-                if self.__non_terminal_signs[i].type == NonTerminalSignType.PROGRAMS:
-                    if self.__set_add(self.__follows[i], TerminalSign(TerminalSignType.POUND)):
-                        flag = True
-                # 开始遍历产生式
-                for production in Grammar.productions:
-                    # 先寻找 X 在产生式中的位置，如果为 -1 则说明没有找到
-                    x_index = -1
-                    for j in range(0, len(production.get_right())):
-                        if self.__non_terminal_signs[i].type == production.get_right()[j].type:
-                            x_index = j
-                    # 如果找到了
-                    if x_index != -1:
-                        # 如果 X 不在产生式的末尾
-                        if x_index < len(production.get_right()) - 1:
-                            # 先看看 X 后面的兄弟 B 的 first 集中有没有空字
-                            b_index = 0
-                            # 寻找 B 的索引
-                            for j in range(0, len(self.__non_terminal_signs)):
-                                if self.__non_terminal_signs[j].type == production.get_left()[x_index + 1].type:
-                                    b_index = j
-                                    break
-                            # 查看其 first 集
-                            empty_find = False
-                            for j in range(0, len(self.__firsts[b_index])):
-                                if self.__firsts[b_index][j].type == TerminalSignType.EMPTY:
-                                    empty_find = True
-                                    break
+            # 遍历产生式 A -> aBb 进行操作
+            for production in Grammar.productions:
+                # 查找 A 的位置
+                a_index = 0
+                for i in range(0, len(self.__non_terminal_signs)):
+                    if production.get_left().type == self.__non_terminal_signs[i].type:
+                        a_index = i
+                        break
 
-                            # (1) 如果 X 后边的兄弟的 first 集中有空字
-                            if empty_find:
-                                # 把 follow(left) 添加到 follow(X) 中去
-                                # 先寻找产生式左边非终结符的 follow 集
-                                left_index = 0
-                                for j in range(0, len(self.__non_terminal_signs)):
-                                    if self.__non_terminal_signs[j].type == production.get_left().type:
-                                        left_index = j
-                                # 执行添加
-                                bigger = False
-                                for j in range(0, len(self.__follows[left_index])):
-                                    if self.__set_add(self.__follows[i], self.__follows[left_index][j]):
-                                        bigger = True
-                                if bigger:
-                                    flag = True
-                            # (2) 如果 X 后边的兄弟的 first 集中没有空字
-                            else:
-                                bigger = False
-                                # 将 X 后边的兄弟的 first 集中不是空字的元素添加到 follow(X) 中
-                                for j in range(0, len(self.__firsts[b_index])):
-                                    if self.__firsts[b_index][j].type != TerminalSignType.EMPTY:
-                                        if self.__set_add(self.__follows[i], self.__firsts[b_index][j]):
-                                            bigger = True
-                                if bigger:
-                                    flag = True
-                        # 如果 X 在产生式的末尾
-                        else:
-                            # 把 follow(left) 添加到 follow(X) 中去
-                            # 先寻找产生式左边非终结符的 follow 集
-                            left_index = 0
-                            for j in range(0, len(self.__non_terminal_signs)):
-                                if self.__non_terminal_signs[j].type == production.get_left().type:
-                                    left_index = j
-                            # 执行添加
+                # 如果产生式的左边是文法的开始符号
+                if production.get_left().type == Grammar.start.type:
+                    # 将 # 添加到 follow(A) 中去
+                    if self.__set_add(self.__follows[a_index], TerminalSign(TerminalSignType.POUND)):
+                        flag = True
+
+                # 开始检测产生式右边的非终结符
+                for i in range(0, len(production.get_right())):
+                    # 如果不是非终结符，直接进入下次循环
+                    if type(production.get_right()[i]) == TerminalSign:
+                        continue
+                    # 如果是非终结符
+                    else:
+                        # 查找当前指向的非终结符的位置
+                        index = 0
+                        for j in range(0, len(self.__non_terminal_signs)):
+                            if production.get_right()[i].type == self.__non_terminal_signs[j].type:
+                                index = j
+                                break
+                        # 如果该非终结符后面已经没有东西了，则将 follow(A) 添加到其 follow 集中
+                        if i == len(production.get_right()) - 1:
                             bigger = False
-                            for j in range(0, len(self.__follows[left_index])):
-                                if self.__set_add(self.__follows[i], self.__follows[left_index][j]):
+                            for j in range(0, len(self.__follows[a_index])):
+                                if self.__set_add(self.__follows[index], self.__follows[a_index][j]):
                                     bigger = True
                             if bigger:
                                 flag = True
+                        # 如果该非终结符后面还有东西，那么
+                        else:
+                            # 如果该非终结符后面是一个终结符
+                            if type(production.get_right()[i + 1]) == TerminalSign:
+                                # 将该终结符添加到 follow(B) 中
+                                if self.__set_add(self.__follows[index], production.get_right()[i + 1]):
+                                    flag = True
+                            # 如果该非终结符后面是一个非终结符
+                            else:
+                                # 将 first(i + 1) 中的非空字元素添加到该非终结符的 follow 集中
+                                # 查找 i + 1 的位置
+                                index2 = 0
+                                for j in range(0, len(self.__non_terminal_signs)):
+                                    if production.get_right()[i + 1].type == self.__non_terminal_signs[j].type:
+                                        index2 = j
+                                        break
+                                # 执行添加，同时判断是否有空字
+                                empty_find = False
+                                bigger = False
+                                for j in range(0, len(self.__firsts[index2])):
+                                    if self.__firsts[index2][j].type != TerminalSignType.EMPTY:
+                                        if self.__set_add(self.__follows[index], self.__firsts[index2][j]):
+                                            bigger = True
+                                    else:
+                                        empty_find = True
+                                if bigger:
+                                    flag = True
+
+                                # 如果其 first 集中含有空字，则将 follow(A) 添加到 follow(B) 中
+                                if empty_find:
+                                    bigger = False
+                                    for j in range(0, len(self.__follows[a_index])):
+                                        if self.__set_add(self.__follows[index], self.__follows[a_index][j]):
+                                            bigger = True
+                                    if bigger:
+                                        flag = True
 
     def __insert_to_table(self, production, terminal):
         """
@@ -1143,51 +1125,44 @@ class PredictingAnalysisTable:
         """
         根据 first 集和 follow 集构建预测分析表
         """
-        # 对文法中的每一个产生式 A->a 执行如下操作
+        # 对文法中的每一个产生式 A->a 进行如下操作
         for production in Grammar.productions:
-            # 如果产生式右边不为空
-            if len(production.get_right()) > 0:
-                # 如果产生式首位是终结符
-                if production.get_right()[0] is TerminalSign:
-                    # first 集就是他本身，将其添加到 M[A,a] 中
+            # 查找 A 的位置
+            a_index = 0
+            for i in range(0, len(self.__non_terminal_signs)):
+                if production.get_left().type == self.__non_terminal_signs[i].type:
+                    a_index = i
+                    break
+
+            # 根据产生式的右边进行判断
+            # 如果产生式的右边为空
+            if len(production.get_right()) == 0:
+                for i in range(0, len(self.__follows[a_index])):
+                    self.__insert_to_table(production, self.__follows[a_index][i])
+            # 如果产生式的右边不为空
+            else:
+                # 如果产生式右边开头为终结符
+                if type(production.get_right()[0]) == TerminalSign:
                     self.__insert_to_table(production, production.get_right()[0])
-                # 如果产生式首位是非终结符
+                # 如果产生式右边开头为非终结符
                 else:
-                    # 求产生式右边的 first 集
+                    # 寻找产生式开头非终结符的位置
                     index = 0
                     for i in range(0, len(self.__non_terminal_signs)):
                         if production.get_right()[0].type == self.__non_terminal_signs[i].type:
                             index = i
                             break
-                    # 将这个 first 集中的所有非终结符添加到 M[A,a] 中去
+                    # 根据其 first 集中所有非空字元素来添加到预测分析表
+                    empty_find = False
                     for i in range(0, len(self.__firsts[index])):
-                        if self.__firsts[index][i].type != TerminalSignType.EMPTY:
+                        if self.__firsts[index][i].type == TerminalSignType.EMPTY:
+                            empty_find = True
+                        else:
                             self.__insert_to_table(production, self.__firsts[index][i])
-
-                    # 另外，如果这个 first 集中包括空字，那么对于 b in follow(A)，把 A->a 添加到 M[A,b] 中去
-                    # 先寻找 A 的 follow 集
-                    a_index = 0
-                    for i in range(0, len(self.__non_terminal_signs)):
-                        if self.__non_terminal_signs[i].type == production.get_left().type:
-                            a_index = i
-                            break
-                    # 执行操作
-                    for i in range(0, len(self.__follows[a_index])):
-                        if self.__follows[a_index][i].type != TerminalSignType.EMPTY:
+                    # 如果有空字
+                    if empty_find:
+                        for i in range(0, len(self.__follows[a_index])):
                             self.__insert_to_table(production, self.__follows[a_index][i])
-            # 如果产生式右边为空
-            else:
-                # 对于 b in follow(A)，把 A->a 添加到 M[A,b] 中
-                # 先寻找 A 的 follow 集
-                a_index = 0
-                for i in range(0, len(self.__non_terminal_signs)):
-                    if self.__non_terminal_signs[i].type == production.get_left().type:
-                        a_index = i
-                        break
-                # 执行操作
-                for i in range(0, len(self.__follows[a_index])):
-                    if self.__follows[a_index][i].type != TerminalSignType.EMPTY:
-                        self.__insert_to_table(production, self.__follows[a_index][i])
 
     def get_production(self, non_terminal_sign, terminal_sign):
         """
@@ -1227,6 +1202,10 @@ class Syntax:
         执行语法分析
         :return: 语法分析是否通过
         """
+        # 新建一张预测分析表
+        pa_table = PredictingAnalysisTable()
+        # 编译预测分析表
+        pa_table.compile()
         # 新建语法树
         grammar_tree = Tree(TreeNode(NonTerminalSign(NonTerminalSignType.PROGRAMS)))
         # 新建栈
