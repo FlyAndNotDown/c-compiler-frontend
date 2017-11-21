@@ -1,6 +1,3 @@
-from lexical import *
-
-
 """
 原文法
 E -> E + T | T

@@ -1,6 +1,6 @@
-from lexical import TokenType
-from error import GrammarError
+from old.error import GrammarError
 
+from old.lexical import TokenType
 
 """
 原文法

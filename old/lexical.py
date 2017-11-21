@@ -4,8 +4,10 @@
 
 
 import re
-from symbol_table import *
-from error import LexicalError
+
+from old.error import LexicalError
+
+from old.symbol_table import *
 
 
 class TokenType:

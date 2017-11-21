@@ -1,37 +1,41 @@
 """
-错误相关
+错误
 """
 
 
 class Error:
     """
-    错误的基类
+    错误
     """
-    def __init__(self, error_str):
+    def __init__(self, error_info):
         """
         构造
-        :param error_str: 错误信息
+        :param error_info: 错误信息
         """
-        self.str = error_str
+        self.info = error_info
 
 
 class LexicalError(Error):
     """
     词法错误
     """
-    def __init__(self, error_str, error_line=-1):
+    def __init__(self, error_info, error_line):
         """
         构造
-        :param error_str: 错误信息
+        :param error_info: 错误信息
         :param error_line: 错误行数
         """
-        super().__init__(error_str)
+        super().__init__(error_info)
         self.line = error_line
 
 
-class GrammarError(Error):
+class SyntaxRuleError(Error):
     """
-    文法错误
+    语法分析规则错误
     """
-    def __init__(self, error_str):
-        super().__init__(error_str)
+    def __init__(self, error_info):
+        """
+        构造
+        :param error_info: 信息
+        """
+        super().__init__(error_info)
