@@ -5,6 +5,7 @@
 
 import re
 from symbol_table import *
+from error import LexicalError
 
 
 class TokenType:
@@ -130,20 +131,6 @@ class RegexTable:
             return None
 
 
-class Error:
-    """
-    错误
-    """
-    def __init__(self, reason='', line=-1):
-        """
-        构造
-        :param reason: 错误原因
-        :param line: 错误发生的行数
-        """
-        self.reason = reason
-        self.line = line
-
-
 class Lexical:
     """
     词法分析器
@@ -248,7 +235,7 @@ class Lexical:
                         error_line = len(enter_location)
 
                     # 报错
-                    self.__error = Error('/* 没有相匹配的 */', error_line)
+                    self.__error = LexicalError('/* 没有相匹配的 */', error_line)
                     return False
             # 如果没有匹配到
             else:
@@ -275,7 +262,7 @@ class Lexical:
                         error_line = len(enter_location)
 
                     # 报错
-                    self.__error = Error('多余的 */', error_line)
+                    self.__error = LexicalError('多余的 */', error_line)
                     return False
                 # 如果没有找到那就说明已经找完了，跳出
                 else:
@@ -339,7 +326,7 @@ class Lexical:
             # 如果匹配完所有的正则表达式都不成功
             if not match_this_time:
                 # 报错
-                self.__error = Error('词法错误', current_line_num)
+                self.__error = LexicalError('词法错误', current_line_num)
                 # 返回失败
                 return False
         # 循环正常结束则说明完全匹配成功，将结果保存到 __tokens 中，返回成功

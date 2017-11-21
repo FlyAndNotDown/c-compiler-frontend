@@ -261,7 +261,8 @@ class PredictingAnalysisTable:
             TerminalSign(TerminalSignType.LEFT_PARENTHESES),
             TerminalSign(TerminalSignType.RIGHT_PARENTHESES),
             TerminalSign(TerminalSignType.I),
-            TerminalSign(TerminalSignType.POUND)
+            TerminalSign(TerminalSignType.POUND),
+            TerminalSign(TerminalSignType.EMPTY)
         ]
         # 非终结符的数量
         self.__non_terminal_num = 0
@@ -295,7 +296,8 @@ class PredictingAnalysisTable:
         # 对每一个文法元素求其 follow 集
         self.__get_follows()
         # 根据 first 集和 follow 集生成预测分析表
-        self.__generate_table()
+        success = self.__generate_table()
+        return success
 
     @classmethod
     def __set_add(cls, container, sign):
@@ -498,7 +500,7 @@ class PredictingAnalysisTable:
     def __insert_to_table(self, production, terminal):
         """
         将产生式插入预测分析表
-        :param production: 产生式
+        :param non_terminal: 非终结符
         :param terminal: 终结符
         """
         # 先判断应该插入到的位置
@@ -512,52 +514,119 @@ class PredictingAnalysisTable:
             if terminal.type == self.__terminal_signs[i].type:
                 y = i
 
-        # 执行插入
-        del self.__table[x][y]
-        self.__table[x].insert(y, production)
+        # 如果那个位置里面本来就已经有产生式了，报错，说明给出的文法并不是 LL(1) 文法
+        if self.__table[x][y]:
+            return False
+        # 如果那个位置里面为空，则说明可以填入
+        else:
+            # 执行插入
+            del self.__table[x][y]
+            self.__table[x].insert(y, production)
+            return True
 
     def __generate_table(self):
         """
         根据 first 集和 follow 集构建预测分析表
         """
+        # 临时 first 集
+        first = list()
         # 对文法中的每一个产生式 A->a 进行如下操作
         for production in Grammar.productions:
-            # 查找 A 的位置
+            # 清空 a 的临时 first 集
+            first.clear()
+
+            # 寻找 A 的位置
             a_index = 0
             for i in range(0, len(self.__non_terminal_signs)):
                 if production.get_left().type == self.__non_terminal_signs[i].type:
                     a_index = i
                     break
 
-            # 根据产生式的右边进行判断
-            # 如果产生式的右边为空
+            # 求 a 的 first 集
+            # 如果 a 为空
             if len(production.get_right()) == 0:
-                for i in range(0, len(self.__follows[a_index])):
-                    self.__insert_to_table(production, self.__follows[a_index][i])
-            # 如果产生式的右边不为空
+                # 将空字添加到 a 的 first 集中去
+                self.__set_add(first, TerminalSign(TerminalSignType.EMPTY))
+            # 如果 a 不为空
             else:
-                # 如果产生式右边开头为终结符
+                # 如果 a 的开头是终结符
                 if type(production.get_right()[0]) == TerminalSign:
-                    self.__insert_to_table(production, production.get_right()[0])
-                # 如果产生式右边开头为非终结符
+                    # 将开头的终结符添加到 a 的 first 集合中去
+                    self.__set_add(first, production.get_right()[0])
+                # 如果 a 的开头是非终结符
                 else:
-                    # 寻找产生式开头非终结符的位置
-                    index = 0
-                    for i in range(0, len(self.__non_terminal_signs)):
-                        if production.get_right()[0].type == self.__non_terminal_signs[i].type:
-                            index = i
-                            break
-                    # 根据其 first 集中所有非空字元素来添加到预测分析表
-                    empty_find = False
-                    for i in range(0, len(self.__firsts[index])):
-                        if self.__firsts[index][i].type == TerminalSignType.EMPTY:
-                            empty_find = True
+                    # (1) 将开头的非终结符的 first 集的所有非空字元素添加到 a 的 first 集中去
+                    for i in range(0, len(self.__firsts[a_index])):
+                        if self.__firsts[a_index][i].type != TerminalSignType.EMPTY:
+                            self.__set_add(first, self.__firsts[a_index][i])
+
+                    # (2) 寻找产生式右边的第一个 first 集中不包含空字的非终结符
+                    # first 集中包含空字的最后一个非终结符在产生式中的索引
+                    last = -1
+                    for i in range(0, len(production.get_right())):
+                        # 首先判断是不是非终结符
+                        if type(production.get_right()[i]) == NonTerminalSign:
+                            # 找到该终结符的 first 集
+                            index = 0
+                            for j in range(0, len(self.__non_terminal_signs)):
+                                if self.__non_terminal_signs[j].type == production.get_right()[i].type:
+                                    index = j
+                                    break
+
+                            # 判断其 first 集中是否有空字
+                            empty_find = False
+                            for j in range(0, len(self.__firsts[index])):
+                                if self.__firsts[index][j].type == TerminalSignType.EMPTY:
+                                    empty_find = True
+                                    break
+
+                            # 如果含有空字，则将 last 更新
+                            if empty_find:
+                                last = i
+                            else:
+                                break
+                        # 如果不是直接跳出
                         else:
-                            self.__insert_to_table(production, self.__firsts[index][i])
-                    # 如果有空字
-                    if empty_find:
-                        for i in range(0, len(self.__follows[a_index])):
-                            self.__insert_to_table(production, self.__follows[a_index][i])
+                            break
+
+                    if last != -1:
+                        # 如果 last 后面还有元素
+                        if last < len(production.get_right()) - 1:
+                            # 如果 last 后面是终结符
+                            if type(production.get_right()[last + 1]) == TerminalSign:
+                                self.__set_add(first, production.get_right()[last + 1])
+                            # 如果是非终结符
+                            else:
+                                # 先找到后面那个非终结符的 first 集
+                                index = 0
+                                for i in range(0, len(self.__non_terminal_signs)):
+                                    if self.__non_terminal_signs[i].type == production.get_right()[last + 1]:
+                                        index = i
+
+                                # 将其 first 集中的所有非空字元素添加到 first 集中去
+                                for i in range(0, len(self.__firsts[index])):
+                                    if self.__firsts[index][i].type != TerminalSignType.EMPTY:
+                                        self.__set_add(first, self.__firsts[index][i])
+                        # 如果 last 是最后一个元素了
+                        else:
+                            self.__set_add(first, TerminalSign(TerminalSignType.EMPTY))
+
+            # 对于每一个终结符 in first(a)，将产生式添加到 M[A, a] 中去
+            empty_find = False
+            for terminal in first:
+                if terminal.type != TerminalSignType.EMPTY:
+                    if not self.__insert_to_table(production, terminal):
+                        return False
+                else:
+                    empty_find = True
+
+            # 若空字也在 first(a) 中，对于任何 b in follow(A)，将产生式添加到 M[A, b] 中去
+            if empty_find:
+                for terminal in self.__follows[a_index]:
+                    if terminal.type != TerminalSignType.EMPTY:
+                        if not self.__insert_to_table(production, terminal):
+                            return False
+        return True
 
     def get_production(self, non_terminal_sign, terminal_sign):
         """
@@ -566,7 +635,19 @@ class PredictingAnalysisTable:
         :param terminal_sign: 终结符
         :return: 产生式
         """
-        return self.__table[non_terminal_sign][terminal_sign]
+        # 寻找非终结符的位置
+        x = 0
+        for i in range(0, len(self.__non_terminal_signs)):
+            if self.__non_terminal_signs[i].type == non_terminal_sign.type:
+                x = i
+                break
+        # 寻找终结符的位置
+        y = 0
+        for i in range(0, len(self.__terminal_signs)):
+            if self.__terminal_signs[i].type == terminal_sign.type:
+                y = i
+                break
+        return self.__table[x][y]
 
 
 class Syntax:
@@ -579,9 +660,9 @@ class Syntax:
         """
         self.__source = list()
         self.__grammar_tree = None
-        self.__error = None
+        self.__error = list()
 
-    def __put_source(self, source):
+    def put_source(self, source):
         """
         载入 tokens
         :param source: 词法分析得到的 token 列表
@@ -597,11 +678,12 @@ class Syntax:
         执行语法分析
         :return: 语法分析是否通过
         """
-        # 新建预测分析表
+        # 新建一张预测分析表
         pa_table = PredictingAnalysisTable()
         # 编译预测分析表
-        pa_table.compile()
-
+        if not pa_table.compile():
+            self.__error.append(Error("文法是非LL(1)的"))
+            return False
         # 新建语法树
         grammar_tree = Tree(TreeNode(NonTerminalSign(NonTerminalSignType.PROGRAMS)))
         # 新建栈
@@ -627,7 +709,7 @@ class Syntax:
             # 获取栈顶节点
             top = stack.top()
             # 如果 top 是终结符
-            if top.data is TerminalSign:
+            if type(top.data) == TerminalSign:
                 # 如果 top = inputs[input_index]
                 if top.data.type == inputs[input_index].type:
                     # 如果 top == '#'
@@ -649,17 +731,17 @@ class Syntax:
             # 如果 top 是非终结符
             else:
                 # 获取预测分析表中对应位置的产生式
-                production = PredictingAnalysisTable.get_production(top.data.type, inputs[input_index].type)
+                production = pa_table.get_production(top.data, inputs[input_index])
                 # 如果获取到了产生式
                 if production:
                     # 将语法树按照产生式生长
                     for r in production.get_right():
-                        top.data.chilren.append(r)
+                        top.children.append(TreeNode(r, list()))
                     # 将栈顶元素出栈
                     stack.pop()
                     # 把 top 的孩子节点按照反序入栈
-                    for i in range(len(top.data.chilren) - 1, -1):
-                        stack.push(top.data.chilren[i])
+                    for child in top.children[::-1]:
+                        stack.push(child)
                 # 如果没能获取到产生式，说明存放着的是错误标志，报错
                 else:
                     # TODO 报错
