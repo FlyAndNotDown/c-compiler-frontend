@@ -63,56 +63,56 @@ class Production:
             self.__str += ' ' + i.type
 
 
-# # 所有终结符的类型
-# terminal_sign_type = [
-#     'else',
-#     'if',
-#     'int',
-#     'return',
-#     'void',
-#     'while',
-#     'addition',
-#     'subtraction',
-#     'multiplication',
-#     'division',
-#     'bigger',
-#     'bigger_equal',
-#     'smaller',
-#     'smaller_equal',
-#     'equal',
-#     'not_equal',
-#     'evaluate',
-#     'semicolon',
-#     'comma',
-#     'left_parentheses',
-#     'right_parentheses',
-#     'left_bracket',
-#     'right_bracket',
-#     'left_brace',
-#     'right_brace',
-#     'id',
-#     'num',
-#      # 在这之前添加非终结符类型，请务必不要动 'pound'
-#     'pound'
-# ]
-#
-# # 所有非终结符的类型
-# non_terminal_sign_type = [
-#
-# ]
-#
-# # 文法产生式
-# productions = [
-#     Production('programs', 'declaration-list')
-# ]
-#
-# # 文法开始符号
-# grammar_start = Sign('programs')
+# 所有终结符的类型
+terminal_sign_type = [
+    'else',
+    'if',
+    'int',
+    'return',
+    'void',
+    'while',
+    'addition',
+    'subtraction',
+    'multiplication',
+    'division',
+    'bigger',
+    'bigger_equal',
+    'smaller',
+    'smaller_equal',
+    'equal',
+    'not_equal',
+    'evaluate',
+    'semicolon',
+    'comma',
+    'left_parentheses',
+    'right_parentheses',
+    'left_bracket',
+    'right_bracket',
+    'left_brace',
+    'right_brace',
+    'id',
+    'num',
+    # 在这之前添加非终结符类型，请务必不要动 'pound'
+    'pound'
+]
+
+# 所有非终结符的类型
+non_terminal_sign_type = [
+
+]
+
+# 文法产生式
+productions = [
+    Production('programs', 'declaration-list')
+]
+
+# 文法开始符号
+grammar_start = Sign('programs')
 
 ##############################################################
 
 # 所有终结符的类型
-terminal_sign_type = [
+terminal_sign_type1 = [
     'addition',
     'multiplication',
     'left_p',
@@ -123,7 +123,7 @@ terminal_sign_type = [
 ]
 
 # 所有非终结符的类型
-non_terminal_sign_type = [
+non_terminal_sign_type1 = [
     'E',
     'E1',
     'T',
@@ -132,7 +132,7 @@ non_terminal_sign_type = [
 ]
 
 # 文法产生式
-productions = [
+productions1 = [
     Production('E', ['T', 'E1']),
     Production('E1', ['addition', 'T', 'E1']),
     Production('E1', []),
@@ -144,4 +144,4 @@ productions = [
 ]
 
 # 文法开始符号
-grammar_start = Sign('E')
+grammar_start1 = Sign('E')

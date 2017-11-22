@@ -250,11 +250,11 @@ class PredictingAnalysisTable:
                         else:
                             # 如果他后面是一个终结符
                             if production.right[i + 1].is_terminal_sign():
-                                if self.__set_add(self.__get_non_terminal_sign_follow(production[i]),
+                                if self.__set_add(self.__get_non_terminal_sign_follow(production.right[i]),
                                                   production.right[i + 1]):
                                     flag = True
                             # 如果他后面是一个非终结符
-                            else:
+                            elif production.right[i + 1].is_non_terminal_sign():
                                 # (1) 将后面非终结符的 first 集中的所有非空元素填入
                                 bigger = False
                                 for j in self.__get_non_terminal_sign_first_no_empty(production.right[i + 1]):
@@ -277,6 +277,10 @@ class PredictingAnalysisTable:
                                             bigger = True
                                     if bigger:
                                         flag = True
+                            # 否则报错
+                            else:
+                                self.__error = SyntaxRuleError('终结符或非终结符类型错误')
+                                return False
                     # 如果是终结符
                     elif production.right[i].is_terminal_sign():
                         continue
@@ -284,6 +288,64 @@ class PredictingAnalysisTable:
                     else:
                         self.__error = SyntaxRuleError('终结符或非终结符类型错误')
                         return False
+
+    def __calculate_production_right_first(self, production):
+        """
+        求产生式右边的 first 集
+        :param production: 产生式
+        :return: first 集
+        """
+        first = list()
+
+        # 开始求 first 集
+        # 如果产生式右边为空
+        if len(production.right) == 0:
+            # 将空字加入其 first 集
+            self.__set_add(first, Sign('empty'))
+        # 如果产生式右边补位空
+        else:
+            # 如果是以终结符开头，将终结符添加到 first 集
+            if production.right[0].is_terminal_sign():
+                self.__set_add(first, production.right[0])
+            # 如果是以非终结符开头
+            elif production.right[0].is_non_terminal_sign():
+                # (1) 将开头非终结符的 first 集中的所有非空元素添加到 first 中
+                for i in self.__get_non_terminal_sign_first_no_empty(production.right[0]):
+                    self.__set_add(first, i)
+
+                # (2) 从第一个非终结符开始循环，如果其 first 集中包含空字，那么将它的下一个符号的 first
+                # 集添加到 first 中
+                for i in range(0, len(production.right)):
+                    if production.right[i].is_non_terminal_sign():
+                        # 如果包含空字
+                        if self.__is_empty_in_non_terminal_sign_first(production.right[i]):
+                            # 如果它是最后一个，将空字填入
+                            if i == len(production.right) - 1:
+                                self.__set_add(first, Sign('empty'))
+                            # 如果不是最后一个
+                            else:
+                                # 如果它之后是终结符
+                                if production.right[i + 1].is_terminal_sign():
+                                    self.__set_add(first, production.right[i + 1])
+                                # 如果它之后是非终结符
+                                elif production.right[i + 1].is_non_terminal_sign():
+                                    for j in self.__get_non_terminal_sign_first_no_empty(production.right[i + 1]):
+                                        self.__set_add(first, j)
+                                # 否则报错
+                                else:
+                                    self.__error = SyntaxRuleError('终结符或非终结符类型错误')
+                                    return False
+                        # 如果不含空字
+                        else:
+                            break
+                    else:
+                        break
+            # 否则报错
+            else:
+                self.__error = SyntaxRuleError('终结符或非终结符类型错误')
+                return False
+
+        return first
 
     def __insert_to_table(self, production, terminal):
         """
@@ -293,26 +355,12 @@ class PredictingAnalysisTable:
         :return: 是否插入成功
         """
         # 先判断应该插入到的位置
-        x = self.__get_non_terminal_index(production.left)
-        y = self.__get_terminal_index(terminal)
+        x = self.__get_non_terminal_sign_index(production.left)
+        y = self.__get_terminal_sign_index(terminal)
 
         # 如果那个位置已经有产生式了
         if self.__table[x][y]:
-            # 判断两个产生式是否一样
-            left_same = production.left.type == self.__table[x][y].left.type
-            right_same = True
-            if len(production.right) != len(self.__table[x][y].right):
-                right_same = False
-            if right_same:
-                for i in range(production.right):
-                    if production.right[i].type != self.__table[x][y].right[i].type:
-                        right_same = False
-            # 如果一样
-            if left_same and right_same:
-                return True
-            # 如果不一样，报错
-            else:
-                self.__error = SyntaxRuleError("文法不是LL(1)的")
+            return False
         # 如果那个位置为空，说明可以填入
         else:
             # 执行插入
@@ -325,4 +373,24 @@ class PredictingAnalysisTable:
         根据 first 集和 follow 集生成预测分析表
         :return: 是否生成成功
         """
-        return False
+        # 对每一条产生式应用规则
+        for production in productions:
+            # 先求出该产生式右边部分的 first 集
+            first = self.__calculate_production_right_first(production)
+
+            # 对每一个 first 集中的每一个终结符执行操作
+            empty_find = False
+            for i in list(first):
+                if i.type == 'empty':
+                    empty_find = True
+                else:
+                    if not self.__insert_to_table(production, i):
+                        return False
+
+            # 如果其 first 集中有空字，则对 follow 集中的每一个终结符执行操作
+            if empty_find:
+                for i in self.__get_non_terminal_sign_follow(production.left):
+                    if not self.__insert_to_table(production, i):
+                        return False
+
+        return True
