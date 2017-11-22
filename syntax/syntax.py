@@ -1,57 +1,8 @@
 """
 语法分析
 """
-from syntax.rule import terminal_sign_type, non_terminal_sign_type
+from syntax.rule import Sign, Production, terminal_sign_type, non_terminal_sign_type, productions, grammar_start
 from error import SyntaxRuleError
-
-class Sign:
-    """
-    终结符和非终结符的基类
-    """
-    def __init__(self, sign_type, sign_str='', sign_line=-1):
-        """
-        构造
-        :param sign_type: 符号的类型
-        :param sign_str: 符号的内容(可以为空)
-        :param sign_line: 符号所在行数(可以为空)
-        """
-        self.type = sign_type
-
-    def is_terminal(self):
-        """
-        是不是终结符
-        :return: True/False
-        """
-        for i in terminal_sign_type:
-            if i.type == self.type:
-                return True
-        return False
-
-    def is_non_terminal(self):
-        """
-        是不是非终结符
-        :return: True/False
-        """
-        for i in non_terminal_sign_type:
-            if i.type == self.type:
-                return True
-        return False
-
-
-class Production:
-    """
-    产生式
-    """
-    def __init__(self, left_type, right_types):
-        """
-        产生式左边
-        :param left: 产生式左边的符号类型
-        :param right: 产生式右边的符号类型列表
-        """
-        self.left = Sign(left_type)
-        self.right = list()
-        for i in right_types:
-            self.right.append(Sign(i))
 
 
 class PredictingAnalysisTable:
@@ -82,7 +33,7 @@ class PredictingAnalysisTable:
         # 根据非终结符和终结符的数量为预测分析表分配空间，并且为每一个格子预先填上 None
         for i in non_terminal_sign_type:
             self.__table.append(list())
-        for i in non_terminal_sign_type:
+        for i in range(0, len(non_terminal_sign_type)):
             for j in terminal_sign_type:
                 self.__table[i].append(None)
 
@@ -100,12 +51,23 @@ class PredictingAnalysisTable:
         编译预测分析表
         """
         # 对每一个文法元素求其 first 集
-        self.__get_firsts()
+        self.__calculate_firsts()
         # 对每一个文法元素求其 follow 集
-        self.__get_follows()
+        self.__calculate_follows()
         # 根据 first 集和 follow 集生成预测分析表
         success = self.__generate_table()
         return success
+
+    def get_production(self, non_terminal_sign, terminal_sign):
+        """
+        从预测分析表中获取产生式
+        :param non_terminal_sign: 非终结符
+        :param terminal_sign: 终结符
+        :return: 产生式
+        """
+        x = self.__get_non_terminal_sign_index(non_terminal_sign)
+        y = self.__get_terminal_sign_index(terminal_sign)
+        return self.__table[x][y]
 
     @classmethod
     def __set_add(cls, container, sign):
@@ -123,7 +85,7 @@ class PredictingAnalysisTable:
             container.append(sign)
         return not exist
 
-    def __get_terminal_index(self, terminal_sign):
+    def __get_terminal_sign_index(self, terminal_sign):
         """
         获取终结符的索引
         :param terminal_sign: 终结符
@@ -134,7 +96,7 @@ class PredictingAnalysisTable:
                 return i
         return -1
 
-    def __get_non_terminal_index(self, non_terminal_sign):
+    def __get_non_terminal_sign_index(self, non_terminal_sign):
         """
         获取非终结符的索引
         :param non_terminal_sign: 非终结符
@@ -145,50 +107,183 @@ class PredictingAnalysisTable:
                 return i
         return -1
 
-    def __get_first_elem_no_empty(self, index):
+    def __get_non_terminal_sign_first(self, non_terminal_sign):
         """
-        按照索引获取对应的非终结符的 first 集的所有非空元素
-        :param index: 非终结符索引
-        :return: 索引对应的非终结符的 first 集的所有非空元素
+        获取目标非终结符的 first 集的引用
+        :param non_terminal_sign: 目标非终结符
+        :return: 其 first 集的引用
         """
+        return self.__firsts[self.__get_non_terminal_sign_index(non_terminal_sign)]
 
-    def __get_first_elem(self, index):
+    def __get_non_terminal_sign_first_no_empty(self, non_terminal_sign):
         """
-        按照索引获取对应的非终结符的 first 集的所有元素
-        :param index: 非终结符索引
-        :return: 索引对应的非终结符的 first 集的所有元素
+        获取目标非终结符的 first 集的非空拷贝
+        :param non_terminal_sign: 目标非终结符
+        :return: 其 first 集的非空拷贝
         """
+        result = list()
+        for i in self.__get_non_terminal_sign_first(non_terminal_sign):
+            if not i.is_empty_sign():
+                result.append(i)
+        return result
 
-    def __first_have_empty(self, index):
+    def __is_empty_in_non_terminal_sign_first(self, non_terminal_sign):
         """
-        判断索引对应的非终结符的 first 集中是否包含空字
-        :param index: 索引
-        :return: 索引对应的非终结符的 first 集中是否包含空字
+        目标非终结符的 first 集中是否有空字
+        :param non_terminal_sign: 目标非终结符
+        :return: True/False
         """
+        for i in self.__get_non_terminal_sign_first(non_terminal_sign):
+            if i.is_empty_sign():
+                return True
+        return False
 
-    def __get_follow_elem(self, index):
+    def __get_non_terminal_sign_follow(self, non_terminal_sign):
         """
-        获取索引对应的非终结符的 follow 集中的元素
-        :param index: 索引
-        :return: 索引对应的非终结符的 follow 集中的元素
+        获取非终结符的 follow 集
+        :param non_terminal_sign: 非终结符
+        :return: 其 follow 集
         """
+        return self.__follows[self.__get_non_terminal_sign_index(non_terminal_sign)]
 
-    def __get_follow_elem_no_empty(self, index):
-        """
-        获取索引对应的非终结符的 follow 集中的非空元素
-        :param index: 索引
-        :return: 索引对应的非终结符的 follow 集中的非空元素
-        """
-
-    def __get_firsts(self):
+    def __calculate_firsts(self):
         """
         求所有的 first 集
         """
+        # 立一个 flag，用来标志 firsts 集是否增大
+        flag = True
+        # 开始循环
+        while flag:
+            flag = False
+            # 在每一次循环之中遍历所有产生式
+            for production in productions:
+                # 如果产生式右边为空
+                if len(production.right) == 0:
+                    # 将空字加入其 first 集
+                    if self.__set_add(self.__get_non_terminal_sign_first(production.left), Sign('empty')):
+                        flag = True
+                # 如果产生式右边不为空
+                else:
+                    # 如果是以终结符开头，将终结符添加到其 first 集
+                    if production.right[0].is_terminal_sign():
+                        if self.__set_add(self.__get_non_terminal_sign_first(production.left), production.right[0]):
+                            flag = True
+                    # 如果是以非终结符开头
+                    elif production.right[0].is_non_terminal_sign():
+                        # (1) 将开头非终结符的 first 集中的所有非空元素添加到产生式左边非终结符的 first 集中
+                        bigger = False
+                        for i in self.__get_non_terminal_sign_first_no_empty(production.right[0]):
+                            if self.__set_add(self.__get_non_terminal_sign_first(production.left), i):
+                                bigger = True
+                        if bigger:
+                            flag = True
 
-    def __get_follows(self):
+                        # (2) 从第一个非终结符开始循环，如果其 first 集中包含空字，那么将它下一个符号的 first
+                        # 集添加到产生式左边非终结符的 first 集中去
+                        for i in range(0, len(production.right)):
+                            if production.right[i].is_non_terminal_sign():
+                                # 如果包含空字
+                                if self.__is_empty_in_non_terminal_sign_first(production.right[i]):
+                                    # 如果它是最后一个，将空字填入
+                                    if i == len(production.right) - 1:
+                                        if self.__set_add(self.__get_non_terminal_sign_first(production.left),
+                                                          Sign('empty')):
+                                            flag = True
+                                    # 如果不是最后一个
+                                    else:
+                                        # 如果它之后是终结符
+                                        if production.right[i + 1].is_terminal_sign():
+                                            if self.__set_add(self.__get_non_terminal_sign_first(production.left),
+                                                              production[i + 1]):
+                                                flag = True
+                                        # 如果它之后是非终结符
+                                        elif production.right[i + 1].is_non_terminal_sign():
+                                            bigger = False
+                                            for j in self.__get_non_terminal_sign_first_no_empty(
+                                                    production.right[i + 1]):
+                                                if self.__set_add(
+                                                        self.__get_non_terminal_sign_first(production.left), j):
+                                                    bigger = True
+                                            if bigger:
+                                                flag = True
+                                        else:
+                                            self.__error = SyntaxRuleError('终结符或非终结符类型错误')
+                                            return False
+                                # 如果不包含空字
+                                else:
+                                    break
+                            else:
+                                break
+                    # 否则报错
+                    else:
+                        self.__error = SyntaxRuleError('终结符或非终结符类型错误')
+                        return False
+
+    def __calculate_follows(self):
         """
         求所有的 follow 集
         """
+        flag = True
+        while flag:
+            flag = False
+            # 遍历所有产生式
+            for production in productions:
+                # 如果产生式左边是开始符号
+                if production.left.type == grammar_start.type:
+                    if self.__set_add(self.__get_non_terminal_sign_follow(production.left), Sign('pound')):
+                        flag = True
+
+                # 遍历产生式右边
+                for i in range(0, len(production.right)):
+                    # 如果是非终结符
+                    if production.right[i].is_non_terminal_sign():
+                        # 如果它是产生式最后一个符号
+                        if i == len(production.right) - 1:
+                            # 将产生式左边非终结符的 follow 集添加到这个符号的 follow 集中
+                            bigger = False
+                            for j in self.__get_non_terminal_sign_follow(production.left):
+                                if self.__set_add(self.__get_non_terminal_sign_follow(production.right[i]), j):
+                                    bigger = True
+                            if bigger:
+                                flag = True
+                        # 否则观察其之后的元素
+                        else:
+                            # 如果他后面是一个终结符
+                            if production.right[i + 1].is_terminal_sign():
+                                if self.__set_add(self.__get_non_terminal_sign_follow(production[i]),
+                                                  production.right[i + 1]):
+                                    flag = True
+                            # 如果他后面是一个非终结符
+                            else:
+                                # (1) 将后面非终结符的 first 集中的所有非空元素填入
+                                bigger = False
+                                for j in self.__get_non_terminal_sign_first_no_empty(production.right[i + 1]):
+                                    if self.__set_add(self.__get_non_terminal_sign_follow(production.right[i]), j):
+                                        bigger = True
+                                if bigger:
+                                    flag = True
+
+                                # (2) 如果后面所有的非终结符 first 集都包含空
+                                # 那么，则将产生式左边的 follow 集添加到该非终结符的 follow 集中去
+                                all_empty_in_first = True
+                                for j in range(i + 1, len(production.right)):
+                                    if not self.__is_empty_in_non_terminal_sign_first(production.right[j]):
+                                        all_empty_in_first = False
+                                        break
+                                if all_empty_in_first:
+                                    bigger = False
+                                    for j in self.__get_non_terminal_sign_follow(production.left):
+                                        if self.__set_add(self.__get_non_terminal_sign_follow(production.right[i]), j):
+                                            bigger = True
+                                    if bigger:
+                                        flag = True
+                    # 如果是终结符
+                    elif production.right[i].is_terminal_sign():
+                        continue
+                    # 否则报错
+                    else:
+                        self.__error = SyntaxRuleError('终结符或非终结符类型错误')
+                        return False
 
     def __insert_to_table(self, production, terminal):
         """
@@ -231,11 +326,3 @@ class PredictingAnalysisTable:
         :return: 是否生成成功
         """
         return False
-
-    def get_production(self, non_terminal_sign, terminal_sign):
-        """
-        从预测分析表中获取产生式
-        :param non_terminal_sign: 非终结符
-        :param terminal_sign: 终结符
-        :return: 产生式
-        """
