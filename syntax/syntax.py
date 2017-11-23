@@ -369,11 +369,73 @@ class PredictingAnalysisTable:
             self.__table[x].insert(y, production)
             return True
 
+    @classmethod
+    def __set_have_repeat(cls, set1, set2):
+        """
+        判断两个集合是否有交集
+        :param set1: 集合1
+        :param set2: 集合2
+        :return: 是否有交集
+        """
+        for i in set1:
+            for j in set2:
+                if i.type == j.type:
+                    return True
+        return False
+
+    def __grammar_rule_debug(self):
+        """
+        调试使用，求一个非终结符对应的所有产生式右边的 first 集中是否有相交元素
+        """
+        # 一个非终结符对应的所有产生式
+        his_productions = list()
+        # 那些产生式对应的 first 集
+        firsts = list()
+        # 错误
+        errors = list()
+
+        # 对于所有的非终结符
+        for non_terminal_sign in self.__non_terminal_signs:
+            # 寻找他对应的所有产生式
+            his_productions.clear()
+            firsts.clear()
+            for production in productions:
+                if non_terminal_sign.type == production.left.type:
+                    his_productions.append(production)
+
+            # 对于那些产生式，分别求 first 集
+            for production in his_productions:
+                firsts.append(self.__calculate_production_right_first(production))
+
+            # 是否有交集
+            have_repeat = False
+            # 查看这些产生式的 first 集两两之间是否有交集
+            for i in range(0, len(his_productions) - 1):
+                for j in range(i + 1, len(his_productions)):
+                    if self.__set_have_repeat(firsts[i], firsts[j]):
+                        have_repeat = True
+                        break
+
+            # 如果有交集
+            if have_repeat:
+                errors.append('产生式 First 集重叠 ' + '非终结符: ' + non_terminal_sign.type)
+
+            # 如果非终结符的 First 集中包含空字
+            if self.__is_empty_in_non_terminal_sign_first(non_terminal_sign):
+                # 如果他的 First 集和 Follow 集有交集
+                if self.__set_have_repeat(self.__get_non_terminal_sign_first(non_terminal_sign),
+                                          self.__get_non_terminal_sign_follow(non_terminal_sign)):
+                    errors.append('产生式 First 集和 Follow 集重叠 ' + '非终结符: ' + non_terminal_sign.type)
+        return
+
     def __generate_table(self):
         """
         根据 first 集和 follow 集生成预测分析表
         :return: 是否生成成功
         """
+        # 调试
+        self.__grammar_rule_debug()
+
         # 对每一条产生式应用规则
         for production in productions:
             # 先求出该产生式右边部分的 first 集
