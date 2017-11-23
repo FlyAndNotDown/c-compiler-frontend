@@ -360,6 +360,7 @@ class PredictingAnalysisTable:
 
         # 如果那个位置已经有产生式了
         if self.__table[x][y]:
+            self.__error = SyntaxRuleError("文法非LL(1)" + production.str)
             return False
         # 如果那个位置为空，说明可以填入
         else:

@@ -58,10 +58,105 @@ class Production:
             self.right.append(Sign(i))
 
         # 调试用的
-        self.__str = self.left.type + ' ->'
+        self.str = self.left.type + ' ->'
         for i in self.right:
-            self.__str += ' ' + i.type
+            self.str += ' ' + i.type
 
+
+"""
+原文法
+1. program -> declaration-list
+2. declaration-list -> declaration-list declaration | declaration
+3. declaration -> var-declaration | fun-declaration
+4. var-declaration -> type-specifier ID ; | type-specifier ID [ NUM ] ;
+5. type-specifier -> int | void
+6. fun-declaration -> type-specifier ID ( params ) | compound-stmt
+7. params -> params-list | void
+8. param-list -> param-list , param | param
+9. param -> type-specifier ID | type-specifier ID [ ]
+10. compound-stmt -> { local-declaration statement-list }
+11. local-declaration -> local-declaration var-declaration | empty
+12. statement-list -> statement-list statement | empty
+13. statement -> expression-stmt | compound-stmt | selection-stmt
+    | iteration-stmt | return-stmt
+14. expression-stmt -> expression ; | ;
+15. selection-stmt -> if ( expression ) statement
+                  | if ( expression ) statement else statement
+16. iteration-stmt -> while ( expression ) statement
+17. return-stmt -> return ; | return expression ;
+18. expression -> var = expression | simple-expression
+19. var -> ID | ID [ expression ]
+20. simple-expression -> additive-expression relop additive-expression
+                        | additive-expression
+21. relop -> <= | < | > | >= | == | !=
+22. additive-expression -> additive-expression addop term | term
+23. addop -> + | -
+24. term -> term mulop factor | factor
+25. mulop -> * | /
+26. factor -> ( expression ) | var | call | NUM
+27. call -> ID ( args )
+28. args -> arg-list | empty
+29. arg-list -> arg-list , expression | expression
+"""
+
+"""
+修改之后的文法
+1. program -> declaration-list
+# 2. declaration-list -> declaration-list declaration | declaration
+2(1). declaration-list -> declaration declaration-list-follow
+2(2). declaration-list-follow -> declaration declaration-list-follow | empty
+3. declaration -> var-declaration | fun-declaration
+# 4. var-declaration -> type-specifier ID ; | type-specifier ID [ NUM ] ;
+4(1). var-declaration -> type-specifier ID var-declaration-follow
+4(2). var-declaration-follow -> ; | [ NUM ] ;
+5. type-specifier -> int | void
+6. fun-declaration -> type-specifier ID ( params ) | compound-stmt
+7. params -> params-list | void
+# 8. param-list -> param-list , param | param
+8(1). param-list -> param param-list-follow
+8(2). param-list-follow -> , param param-list-follow | empty
+# 9. param -> type-specifier ID | type-specifier ID [ ]
+9(1). param -> type-specifier ID param-follow
+9(2). param-follow -> [ ] | empty
+10. compound-stmt -> { local-declaration statement-list }
+# 11. local-declaration -> local-declaration var-declaration | empty
+11(1). local-declaration -> var-declaration local-declaration | empty
+# 12. statement-list -> statement-list statement | empty
+12(1). statement-list -> statement statement-list | empty
+13. statement -> expression-stmt | compound-stmt | selection-stmt
+    | iteration-stmt | return-stmt
+14. expression-stmt -> expression ; | ;
+# 15. selection-stmt -> if ( expression ) statement
+                  | if ( expression ) statement else statement
+15(1). selection-stmt -> if ( expression ) statement
+16. iteration-stmt -> while ( expression ) statement
+# 17. return-stmt -> return ; | return expression ;
+17(1). return-stmt -> return return-stmt-follow
+17(2). return-stmt-follow -> expression ; | ;
+18. expression -> var = expression | simple-expression
+# 19. var -> ID | ID [ expression ]
+19(1). var -> ID var-follow
+19(2). var-follow -> [ expression ] | empty
+# 20. simple-expression -> additive-expression relop additive-expression
+                        | additive-expression
+20(1). simple-expression -> additive-expression simple-expression-follow
+20(2). simple-expression-follow -> relop additive-expression | empty
+21. relop -> <= | < | > | >= | == | !=
+# 22. additive-expression -> additive-expression addop term | term
+22(1). additive-expression -> term additive-expression-follow
+22(2). additive-expression-follow -> addop term additive-expression-follow | empty
+23. addop -> + | -
+# 24. term -> term mulop factor | factor
+24(1) term -> factor term-follow
+24(2) term-follow -> mulop factor term-follow | empty
+25. mulop -> * | /
+26. factor -> ( expression ) | var | call | NUM
+27. call -> ID ( args )
+28. args -> arg-list | empty
+# 29. arg-list -> arg-list , expression | expression
+29(1). arg-list -> expression arg-list-follow
+29(2). arg-list-follow -> , expression arg-list-follow | empty
+"""
 
 # 所有终结符的类型
 terminal_sign_type = [
@@ -98,7 +193,45 @@ terminal_sign_type = [
 
 # 所有非终结符的类型
 non_terminal_sign_type = [
-
+    'program',
+    'declaration-list',
+    'declaration-list-follow',
+    'declaration',
+    'var-declaration',
+    'var-declaration-follow',
+    'type-specifier',
+    'fun-declaration',
+    'params',
+    'param-list',
+    'param-list-follow',
+    'param',
+    'param-follow',
+    'compound-stmt',
+    'local-declaration',
+    'statement-list',
+    'statement',
+    'expression-stmt',
+    'selection-stmt',
+    'iteration-stmt',
+    'return-stmt',
+    'return-stmt-follow',
+    'expression',
+    'var',
+    'var-follow',
+    'simple-expression',
+    'simple-expression-follow',
+    'relop',
+    'additive-expression',
+    'additive-expression-follow',
+    'addop',
+    'term',
+    'term-follow',
+    'mulop',
+    'factor',
+    'call',
+    'args',
+    'arg-list',
+    'arg-list-follow'
 ]
 
 # 文法产生式
