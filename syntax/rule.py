@@ -106,7 +106,8 @@ class Production:
 29(1).  arg-list -> expression arg-list-follow
 29(2).  arg-list-follow -> , expression arg-list-follow | empty
 30(1).  var-or-call -> ID var-or-call-follow
-30(2).  var-or-call-follow -> var-follow | ( args )
+30(2).  var-or-call-follow -> var-follow | fun-follow
+30(3).  fun-follow -> ( args )
 """
 
 # 所有终结符的类型
@@ -184,7 +185,8 @@ non_terminal_sign_type = [
     'arg-list',
     'arg-list-follow',
     'var-or-call',
-    'var-or-call-follow'
+    'var-or-call-follow',
+    'fun-follow'
 ]
 
 # 文法产生式
@@ -301,9 +303,11 @@ productions = [
     Production('arg-list-follow', []),
     # 30(1). var-or-call -> ID var-or-call-follow
     Production('var-or-call', ['id', 'var-or-call-follow']),
-    # 30(2). var-or-call-follow -> var-follow | ( args )
+    # 30(2). var-or-call-follow -> var-follow | fun-follow
     Production('var-or-call-follow', ['var-follow']),
-    Production('var-or-call-follow', ['left_parentheses', 'args', 'right_parentheses'])
+    Production('var-or-call-follow', ['fun-follow']),
+    # 30(3) fun-follow -> ( args )
+    Production('fun-follow', ['left_parentheses', 'args', 'right_parentheses'])
 ]
 
 # 文法开始符号
