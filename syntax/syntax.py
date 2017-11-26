@@ -360,8 +360,28 @@ class PredictingAnalysisTable:
 
         # 如果那个位置已经有产生式了
         if self.__table[x][y]:
-            self.__error = SyntaxRuleError("文法非LL(1)" + production.str)
-            return False
+            # 判断这个产生式是不是与要插入的产生式一样
+            same_left = production.left.type == self.__table[x][y].left.type
+            if same_left:
+                same_right = True
+                if len(production.right) != len(self.__table[x][y].right):
+                    self.__error = SyntaxRuleError("文法非LL(1)" + production.str)
+                    return False
+                else:
+                    for i in range(0, len(production.right)):
+                        if production.right[i].type != self.__table[x][y].right[i].type:
+                            same_right = False
+                    if same_right:
+                        # 执行插入
+                        del self.__table[x][y]
+                        self.__table[x].insert(y, production)
+                        return True
+                    else:
+                        self.__error = SyntaxRuleError("文法非LL(1)" + production.str)
+                        return False
+            else:
+                self.__error = SyntaxRuleError("文法非LL(1)" + production.str)
+                return False
         # 如果那个位置为空，说明可以填入
         else:
             # 执行插入
