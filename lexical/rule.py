@@ -11,20 +11,20 @@ token_type = [
     'multiplication',
     'division',
     'bigger',
-    'bigger_equal',
+    'bigger-equal',
     'smaller',
-    'smaller_equal',
+    'smaller-equal',
     'equal',
-    'not_equal',
+    'not-equal',
     'evaluate',
     'semicolon',
     'comma',
-    'left_parentheses',
-    'right_parentheses',
-    'left_bracket',
-    'right_bracket',
-    'left_brace',
-    'right_brace',
+    'left-parentheses',
+    'right-parentheses',
+    'left-bracket',
+    'right-bracket',
+    'left-brace',
+    'right-brace',
     'id',
     'num'
 ]
@@ -36,15 +36,15 @@ split_char_type = [
 
 # 注释
 note_char_type = (
-    'note_start',
-    'note_end'
+    'note-start',
+    'note-end'
 )
 
 # 正则表达式字典
 regex_dict = {
     'space': r' +',
-    'note_start': r'/\*',
-    'note_end': r'\*/',
+    'note-start': r'/\*',
+    'note-end': r'\*/',
     'else': r'else',
     'if': r'if',
     'int': r'int',
@@ -56,20 +56,20 @@ regex_dict = {
     'multiplication': r'\*',
     'division': r'/',
     'bigger': r'>',
-    'bigger_equal': r'>=',
+    'bigger-equal': r'>=',
     'smaller': r'<',
-    'smaller_equal': r'<=',
+    'smaller-equal': r'<=',
     'equal': r'==',
-    'not_equal': r'!=',
+    'not-equal': r'!=',
     'evaluate': r'=',
     'semicolon': r';',
     'comma': r',',
-    'left_parentheses': r'\(',
-    'right_parentheses': r'\)',
-    'left_bracket': r'\[',
-    'right_bracket': r'\]',
-    'left_brace': r'\{',
-    'right_brace': r'\}',
+    'left-parentheses': r'\(',
+    'right-parentheses': r'\)',
+    'left-bracket': r'\[',
+    'right-bracket': r'\]',
+    'left-brace': r'\{',
+    'right-brace': r'\}',
     'id': r'[a-zA-Z][a-zA-Z]*',
     'num': r'[1-9][0-9]*|0'
 }

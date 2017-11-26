@@ -2,6 +2,7 @@
 主程序
 """
 from lexical.lexical import Lexical
+from syntax.syntax import Syntax
 
 
 # 新建词法分析器
@@ -18,5 +19,10 @@ if lexical_success:
     print('词法分析结果:')
     for i in lexical_result:
         print(i.type, i.str, i.line)
+
+    # 开始执行语法分析
+    syntax = Syntax()
+    syntax.put_source(lexical_result)
+    syntax.execute()
 else:
     print('错误原因:\t', lexical.get_error())

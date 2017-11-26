@@ -509,12 +509,13 @@ class Node:
     """
     树节点
     """
-    def __init__(self, sign):
+    def __init__(self, data):
         """
         树节点
-        :param sign: 节点符号
+        :param data: 节点数据
         """
-        self.sign = sign
+        self.data = data
+        self.str = data.type
         self.children = list()
 
 
@@ -616,4 +617,63 @@ class Syntax:
         """
         return self.__grammar_tree
 
-    
+    def execute(self):
+        """
+        执行操作
+        :return: 语法分析是否成功
+        """
+        # 新建栈
+        stack = Stack()
+        # 新建临时语法树
+        grammar_tree = Tree(Node(Sign(grammar_start.type)))
+
+        # 将 # 入栈
+        stack.push(Node(Sign('pound')))
+        # 将语法树根节点入栈
+        stack.push(grammar_tree.root)
+
+        # 拷贝转换之后的终结符到输入串
+        inputs = list()
+        for sign in self.__terminals:
+            inputs.append(sign)
+        # 设置当前输入符号索引
+        input_index = 0
+
+        # 立下 flag
+        flag = True
+        while flag:
+            # 如果 top 是非终结符
+            if stack.top().data.is_non_terminal_sign():
+                # 查看分析表
+                production = self.__pa_table.get_production(stack.top().data, inputs[input_index])
+                # 如果分析表对应位置存有产生式
+                if production:
+                    # 将语法树按照产生式进行生长
+                    for sign in production.right:
+                        stack.top().children.append(Node(Sign(sign.type)))
+                    # 将 top 出栈
+                    top = stack.pop()
+                    # 将 top 的孩子节点反序入栈
+                    for child in top.children[::-1]:
+                        stack.push(child)
+                        # TODO 同时进行相应的语义动作
+                # 如果分析表中存放着错误信息
+                else:
+                    # TODO 出错处理
+                    return False
+            # 如果 top 是终结符
+            else:
+                # 如果 top = input
+                if stack.top().data.type == inputs[input_index].type:
+                    # 如果 top = #，宣布分析成功
+                    if stack.top().data.type == 'pound':
+                        flag = False
+                    # 如果 top != #
+                    else:
+                        # 将 top 出栈，让 input_index 自增
+                        stack.pop()
+                        input_index += 1
+                # 如果 top != input
+                else:
+                    # TODO 出错处理
+                    return False

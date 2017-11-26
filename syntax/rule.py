@@ -10,6 +10,8 @@ class Sign:
         :param sign_line: 符号所在行数(可以为空)
         """
         self.type = sign_type
+        self.str = sign_str
+        self.line = sign_line
 
     def is_terminal_sign(self):
         """
