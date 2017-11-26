@@ -503,3 +503,117 @@ class PredictingAnalysisTable:
                         return False
 
         return True
+
+
+class Node:
+    """
+    树节点
+    """
+    def __init__(self, sign):
+        """
+        树节点
+        :param sign: 节点符号
+        """
+        self.sign = sign
+        self.children = list()
+
+
+class Tree:
+    """
+    树
+    """
+    def __init__(self, root):
+        """
+        构造
+        :param root: 树的根节点
+        """
+        self.root = root
+
+
+class Stack:
+    """
+    栈
+    """
+    def __init__(self):
+        """
+        构造
+        """
+        self.__container = list()
+
+    def push(self, elem):
+        """
+        入栈
+        :param elem: 入栈元素
+        """
+        self.__container.append(elem)
+
+    def pop(self):
+        """
+        将栈顶元素出栈
+        :return: 栈顶元素
+        """
+        top = self.top()
+        self.__container.pop()
+        return top
+
+    def top(self):
+        """
+        获取栈顶元素
+        :return: 栈顶元素
+        """
+        return self.__container[-1]
+
+    def empty(self):
+        """
+        栈是否为空
+        :return: 栈是否为空
+        """
+        return len(self.__container) == 0
+
+
+class Syntax:
+    """
+    语法分析器
+    """
+    def __init__(self):
+        """
+        构造
+        """
+        # 语法树的构建
+        self.__grammar_tree = None
+        # 准备存放错误
+        self.__error = list()
+        # 预测分析表的构建
+        self.__pa_table = PredictingAnalysisTable()
+        # 编译预测分析表
+        if self.__pa_table.compile():
+            self.__error.append(SyntaxRuleError('预测分析表编译失败'))
+        # 准备存放词法分析的结果
+        self.__source = list()
+        # 将词法分析产生的 token 转换成的终结符
+        self.__terminals = list()
+
+    def put_source(self, source):
+        """
+        装填词法分析结果
+        :param source: 词法分析结果
+        """
+        self.__source.clear()
+        self.__terminals.clear()
+        # 装填词法分析结果
+        for s in source:
+            self.__source.append(s)
+        # 将 tokens 转换成终结符
+        for s in self.__source:
+            self.__terminals.append(Sign(s.type, s.str, s.line))
+        # 在所有 tokens 的最后填入一个 #
+        self.__terminals.append(Sign('pound'))
+
+    def get_result(self):
+        """
+        获取语法树
+        :return: 语法树
+        """
+        return self.__grammar_tree
+
+    
