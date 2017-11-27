@@ -19,10 +19,16 @@ if lexical_success:
     print('词法分析结果:')
     for i in lexical_result:
         print(i.type, i.str, i.line)
+    print()
 
     # 开始执行语法分析
     syntax = Syntax()
     syntax.put_source(lexical_result)
-    syntax.execute()
+    syntax_success = syntax.execute()
+    print('语法分析是否成功\t', syntax_success)
+    if syntax_success:
+        print('语法分析结果:')
+    else:
+        print('错误原因:\t', syntax.get_error().info, syntax.get_error().line, '行')
 else:
-    print('错误原因:\t', lexical.get_error())
+    print('错误原因:\t', lexical.get_error().info)

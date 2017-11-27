@@ -2,7 +2,7 @@
 语法分析
 """
 from syntax.rule import Sign, Production, terminal_sign_type, non_terminal_sign_type, productions, grammar_start
-from error import SyntaxRuleError
+from error import SyntaxRuleError, SyntaxError
 
 
 class PredictingAnalysisTable:
@@ -617,6 +617,13 @@ class Syntax:
         """
         return self.__grammar_tree
 
+    def get_error(self):
+        """
+        获取错误
+        :return: 错误
+        """
+        return self.__error
+
     def execute(self):
         """
         执行操作
@@ -624,6 +631,8 @@ class Syntax:
         """
         # 新建栈
         stack = Stack()
+        # 清空错误
+        self.__error = None
         # 新建临时语法树
         grammar_tree = Tree(Node(Sign(grammar_start.type)))
 
@@ -659,8 +668,8 @@ class Syntax:
                         # TODO 同时进行相应的语义动作
                 # 如果分析表中存放着错误信息
                 else:
-                    # TODO 出错处理
-                    return False
+                    self.__error = SyntaxError('语法错误 ' + inputs[input_index].str, inputs[input_index].line)
+                    break
             # 如果 top 是终结符
             else:
                 # 如果 top = input
@@ -675,5 +684,10 @@ class Syntax:
                         input_index += 1
                 # 如果 top != input
                 else:
-                    # TODO 出错处理
-                    return False
+                    self.__error = SyntaxError('语法错误 ' + inputs[input_index].str, inputs[input_index].line)
+                    break
+
+        if self.__error:
+            return False
+        else:
+            return True

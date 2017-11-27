@@ -6,9 +6,9 @@ int gcd(int u, int v) {
         return gcd(v, u-u/v*v);
     }
     /* u-u/v*v* == u mod v */
-}
 
-void main() {
+
+void main()
     int x;
     int y;
     x = input();
