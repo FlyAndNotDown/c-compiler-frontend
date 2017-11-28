@@ -194,7 +194,7 @@ class PredictingAnalysisTable:
                                         # 如果它之后是终结符
                                         if production.right[i + 1].is_terminal_sign():
                                             if self.__set_add(self.__get_non_terminal_sign_first(production.left),
-                                                              production[i + 1]):
+                                                              production.right[i + 1]):
                                                 flag = True
                                         # 如果它之后是非终结符
                                         elif production.right[i + 1].is_non_terminal_sign():
