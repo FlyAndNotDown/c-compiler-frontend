@@ -66,54 +66,6 @@ class Production:
 
 
 """
-修改之后的文法
-1.      program -> declaration-list
-2(1).   declaration-list -> declaration declaration-list-follow
-2(2).   declaration-list-follow -> declaration declaration-list-follow | empty
-3.      declaration -> var-declaration | fun-declaration
-4(1).   var-declaration -> type-specifier ID var-declaration-follow
-4(2).   var-declaration-follow -> ; | [ NUM ] ;
-5.      type-specifier -> int | void
-6.      fun-declaration -> type-specifier ID ( params ) | compound-stmt
-7.      params -> param-list | void
-8(1).   param-list -> param param-list-follow
-8(2).   param-list-follow -> , param param-list-follow | empty
-9(1).   param -> type-specifier ID param-follow
-9(2).   param-follow -> [ ] | empty
-10.     compound-stmt -> { local-declaration statement-list }
-11(1).  local-declaration -> var-declaration local-declaration | empty
-12(1).  statement-list -> statement statement-list | empty
-13.     statement -> expression-stmt | compound-stmt | selection-stmt
-                    | iteration-stmt | return-stmt
-14.     expression-stmt -> expression ; | ;
-15(1).  selection-stmt -> if ( expression ) statement
-16.     iteration-stmt -> while ( expression ) statement
-17(1).  return-stmt -> return return-stmt-follow
-17(2).  return-stmt-follow -> expression ; | ;
-18.     expression -> var = expression | simple-expression
-19(1).  var -> ID var-follow
-19(2).  var-follow -> [ expression ] | empty
-20(1).  simple-expression -> additive-expression simple-expression-follow
-20(2).  simple-expression-follow -> relop additive-expression | empty
-21.     relop -> <= | < | > | >= | == | !=
-22(1).  additive-expression -> term additive-expression-follow
-22(2).  additive-expression-follow -> addop term additive-expression-follow | empty
-23.     addop -> + | -
-24(1)   term -> factor term-follow
-24(2)   term-follow -> mulop factor term-follow | empty
-25.     mulop -> * | /
-# 26.     factor -> ( expression ) | var-or-call | NUM
-26(1).  factor -> 
-27.     call -> ID ( args )
-28.     args -> arg-list | empty
-29(1).  arg-list -> expression arg-list-follow
-29(2).  arg-list-follow -> , expression arg-list-follow | empty
-30(1).  var-or-call -> ID var-or-call-follow
-30(2).  var-or-call-follow -> var-follow | fun-follow
-30(3).  fun-follow -> ( args )
-"""
-
-"""
 重新写的文法
 1.  program -> define-list
 2.  define-list -> define define-list | empty
@@ -132,36 +84,33 @@ class Production:
 15. local-var-define -> type ID var-define-follow
 16. code-list -> code code-list | empty
 17. code -> normal-statement | selection-statement | iteration-statement | return-statement
-#   normal-statement -> ; | ID var-follow = expression ; | ID call-follow ;
-    normal-statement -> ; | ID normal-statement-follow
-    normal-statement-follow -> var-follow = expression ; | call-follow ;
-    call-follow -> ( call-params )
-    call-params -> call-param-list | empty
-    call-param-list -> expression call-param-follow
-    call-param-follow -> , expression call-param-follow | empty
-19. selection-statement -> if ( expression ) { code-list } selection-follow
-20. selection-follow -> else { code-list } | empty
-21. iteration-statement -> while ( expression ) iteration-follow
-22. iteration-follow -> { code-list } | code
-23. return-statement -> return return-follow
-24. return-follow -> ; | expression ;
-#   eval-statement -> var = expression
-#   var -> ID var-follow
-27. var-follow -> [ expression ] | empty
-28. expression -> additive-expr expression-follow
-29. expression-follow -> rel-op additive-expr | empty
-30. rel-op -> <= | < | > | >= | == | !=
-31. additive-expr -> term additive-expr-follow
-32. additive-expr-follow -> add-op term additive-expr-follow | empty
-33. add-op -> + | -
-34. term -> factor term-follow
-35. term-follow -> mul-op factor term-follow | empty
-36. mul-op -> * | /
-37. factor -> ( expression ) | ID id-factor-follow | NUM
-38. id-factor-follow -> var-follow | ( args )
-39. args -> arg-list | empty
-40. arg-list -> expression arg-list-follow
-41. arg-list-follow -> , expression arg-list-follow | empty
+18. normal-statement -> ; | ID normal-statement-follow
+19. normal-statement-follow -> var-follow = expression ; | call-follow ;
+20. call-follow -> ( call-params )
+21. call-params -> call-param-list | empty
+22. call-param-list -> expression call-param-follow
+23. call-param-follow -> , expression call-param-follow | empty
+24. selection-statement -> if ( expression ) { code-list } selection-follow
+25. selection-follow -> else { code-list } | empty
+26. iteration-statement -> while ( expression ) iteration-follow
+27. iteration-follow -> { code-list } | code
+28. return-statement -> return return-follow
+29. return-follow -> ; | expression ;
+30. var-follow -> [ expression ] | empty
+31. expression -> additive-expr expression-follow
+32. expression-follow -> rel-op additive-expr | empty
+33. rel-op -> <= | < | > | >= | == | !=
+34. additive-expr -> term additive-expr-follow
+35. additive-expr-follow -> add-op term additive-expr-follow | empty
+36. add-op -> + | -
+37. term -> factor term-follow
+38. term-follow -> mul-op factor term-follow | empty
+39. mul-op -> * | /
+40. factor -> ( expression ) | ID id-factor-follow | NUM
+41. id-factor-follow -> var-follow | ( args )
+42. args -> arg-list | empty
+43. arg-list -> expression arg-list-follow
+44. arg-list-follow -> , expression arg-list-follow | empty
 """
 
 # 所有终结符的类型
