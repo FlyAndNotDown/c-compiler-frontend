@@ -68,49 +68,83 @@ class Production:
 """
 重新写的文法
 1.  program -> define-list
-2.  define-list -> define define-list | empty
+2.  define-list -> define define-list
+                | empty
 3.  define -> type ID define-type
-4.  define-type -> var-define-follow | fun-define-follow
-5.  var-define-follow -> ; | [ NUM ] ;
-6.  type -> int | void
+4.  define-type -> var-define-follow
+                | fun-define-follow
+5.  var-define-follow -> ;
+                | [ NUM ] ;
+6.  type -> int
+                | void
 7.  fun-define-follow -> ( params ) code-block
-8.  params -> param-list | empty
+8.  params -> param-list
+                | empty
 9.  param-list -> param param-follow
-10. param-follow -> , param param-follow | empty
+10. param-follow -> , param param-follow
+                | empty
 11. param -> type ID array-subscript
-12. array-subscript -> [ ] | empty
+12. array-subscript -> [ ]
+                | empty
 13. code-block -> { local-define-list code-list }
-14. local-define-list -> local-var-define local-define-list | empty
+14. local-define-list -> local-var-define local-define-list
+                | empty
 15. local-var-define -> type ID var-define-follow
-16. code-list -> code code-list | empty
-17. code -> normal-statement | selection-statement | iteration-statement | return-statement
-18. normal-statement -> ; | ID normal-statement-follow
-19. normal-statement-follow -> var-follow = expression ; | call-follow ;
+16. code-list -> code code-list
+                | empty
+17. code -> normal-statement
+                | selection-statement
+                | iteration-statement
+                | return-statement
+18. normal-statement -> ;
+                | ID normal-statement-follow
+19. normal-statement-follow -> var-follow = expression ;
+                | call-follow ;
 20. call-follow -> ( call-params )
-21. call-params -> call-param-list | empty
+21. call-params -> call-param-list
+                | empty
 22. call-param-list -> expression call-param-follow
-23. call-param-follow -> , expression call-param-follow | empty
+23. call-param-follow -> , expression call-param-follow
+                | empty
 24. selection-statement -> if ( expression ) { code-list } selection-follow
-25. selection-follow -> else { code-list } | empty
+25. selection-follow -> else { code-list }
+                | empty
 26. iteration-statement -> while ( expression ) iteration-follow
-27. iteration-follow -> { code-list } | code
+27. iteration-follow -> { code-list }
+                | code
 28. return-statement -> return return-follow
-29. return-follow -> ; | expression ;
-30. var-follow -> [ expression ] | empty
+29. return-follow -> ;
+                | expression ;
+30. var-follow -> [ expression ]
+                | empty
 31. expression -> additive-expr expression-follow
-32. expression-follow -> rel-op additive-expr | empty
-33. rel-op -> <= | < | > | >= | == | !=
+32. expression-follow -> rel-op additive-expr
+                | empty
+33. rel-op ->     <=
+                | <
+                | >
+                | >=
+                | ==
+                | !=
 34. additive-expr -> term additive-expr-follow
-35. additive-expr-follow -> add-op term additive-expr-follow | empty
-36. add-op -> + | -
+35. additive-expr-follow -> add-op term additive-expr-follow
+                | empty
+36. add-op ->     +
+                | -
 37. term -> factor term-follow
-38. term-follow -> mul-op factor term-follow | empty
-39. mul-op -> * | /
-40. factor -> ( expression ) | ID id-factor-follow | NUM
-41. id-factor-follow -> var-follow | ( args )
-42. args -> arg-list | empty
+38. term-follow -> mul-op factor term-follow
+                | empty
+39. mul-op ->     *
+                | /
+40. factor -> ( expression )
+                | ID id-factor-follow | NUM
+41. id-factor-follow -> var-follow
+                | ( args )
+42. args -> arg-list
+                | empty
 43. arg-list -> expression arg-list-follow
-44. arg-list-follow -> , expression arg-list-follow | empty
+44. arg-list-follow -> , expression arg-list-follow
+                | empty
 """
 
 
