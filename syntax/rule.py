@@ -46,11 +46,12 @@ class Production:
     """
     产生式
     """
-    def __init__(self, left_type, right_types):
+    def __init__(self, left_type, right_types, rule_key_l, rule_key_r):
         """
         产生式左边
         :param left_type: 产生式左边的符号类型
         :param right_types: 产生式右边的符号类型列表
+        :param rule_key: 语义规则关键字
         """
         self.left = Sign(left_type)
         self.right = list()
@@ -62,19 +63,24 @@ class Production:
         for i in self.right:
             self.str += ' ' + i.type
 
+        self.rule_key_l = rule_key_l
+        self.rule_key_r = list()
+        for i in rule_key_r:
+            self.rule_key_r.append(i)
+
 
 """
-重新写的文法
+添加语义规则的文法
 1.  program -> define-list
 2.  define-list -> define define-list
-                | empty
+                 | empty
 3.  define -> type ID define-type
 4.  define-type -> var-define-follow
-                | fun-define-follow
+                 | fun-define-follow
 5.  var-define-follow -> ;
-                | [ NUM ] ;
-6.  type -> int
-                | void
+                 | [ NUM ] ;
+6.  type ->    int
+             | void
 7.  fun-define-follow -> ( params ) code-block
 8.  params -> param-list
                 | empty

@@ -53,3 +53,11 @@ class SyntaxError(Error):
         """
         super().__init__(error_info)
         self.line = error_line
+
+
+class SemanticError(Error):
+    """
+    语义分析错误
+    """
+    def __init__(self, info):
+        super().__init__(info)

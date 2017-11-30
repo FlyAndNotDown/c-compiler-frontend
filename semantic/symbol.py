@@ -2,23 +2,36 @@ class Symbol:
     """
     符号单项
     """
-    def __init__(self, symbol_name):
+    TYPE_NORMAL_VAR = 0
+    TYPE_ARRAY = 1
+
+    def __init__(self, symbol_name, s_type, width):
         """
         构造
         :param symbol_name: 符号名
         """
         self.name = symbol_name
+        self.type = s_type
+        self.offset = 0
+        self.width = width
 
 
 class SymbolTable:
     """
     符号表
     """
-    def __init__(self):
+    TYPE_GLOBAL_VAR = 0
+    TYPE_LOCAL_VAR = 1
+
+    def __init__(self, st_type, st_name):
         """
         构造
         """
         self.__table = list()
+        self.type = st_type
+        self.name = st_name
+        self.offset = 0
+        self.width = 0
 
     def exist(self, symbol_name):
         """
@@ -41,6 +54,8 @@ class SymbolTable:
             return False
         else:
             self.__table.append(symbol)
+            self.__table[-1].offset = self.width
+            self.width += self.__table[-1].width
             return True
 
     def query(self, symbol_name):
@@ -54,25 +69,6 @@ class SymbolTable:
                 return symbol
         return None
 
-    def update(self, symbol):
-        """
-        根据给出的新内容更新原有的符号
-        :param symbol: 新符号
-        :return: 如果符号不存在，返回 False，如果存在，更新之后返回 True
-        """
-        if self.exist(symbol.name):
-            index = 0
-            for i in range(0, len(self.__table)):
-                if self.__table[i].name == symbol.name:
-                    index = i
-
-            # 执行更新
-            del self.__table[index]
-            self.__table.insert(index, symbol)
-            return True
-        else:
-            return False
-
     def delete(self, symbol_name):
         """
         根据名字删除符号
@@ -85,7 +81,51 @@ class SymbolTable:
                 if self.__table[i].name == symbol_name:
                     index = i
 
+            width_t = self.__table[index].width
+            for i in range(index, len(self.__table)):
+                self.__table[i].offset -= width_t
+            self.width -= width_t
             del self.__table[index]
             return True
         else:
             return False
+
+
+class SymbolTablePool:
+    """
+    符号表池
+    """
+    def __init__(self):
+        """
+        构造
+        """
+        self.__pool = list()
+
+    def exist(self, name):
+        """
+        查找某一个符号表是否存在
+        :param name: 符号表名
+        :return: 对应的符号表
+        """
+        for symbol_table in self.__pool:
+            if symbol_table.name == name:
+                return True
+        return False
+
+    def query(self, name):
+        """
+        查询一个符号表
+        :param name: 符号表名
+        :return 对应的符号表
+        """
+        for symbol_table in self.__pool:
+            if symbol_table.name == name:
+                return symbol_table
+        return None
+
+    def append(self, symbol_table):
+        """
+        添加一张新表
+        :param symbol_table: 符号表
+        """
+        self.__pool.append(symbol_table)
