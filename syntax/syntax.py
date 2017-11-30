@@ -519,12 +519,6 @@ class Node:
         self.children = list()
 
         # 属性
-        self.code = list()
-        self.lexical = ''
-        self.type = ''
-        self.var_fun = 'var'
-        self.line = 0
-        self.length = 0
 
 
 class Tree:

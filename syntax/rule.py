@@ -70,7 +70,6 @@ class Production:
 
 
 """
-添加语义规则的文法
 1.  program -> define-list
 2.  define-list -> define define-list
                  | empty
