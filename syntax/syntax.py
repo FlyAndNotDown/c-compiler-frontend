@@ -517,6 +517,7 @@ class Node:
         self.data = data
         self.str = data.type
         self.children = list()
+        self.parent = None
 
         # 属性
         self.code = list()
@@ -527,6 +528,18 @@ class Node:
         self.types = list()
         self.names = list()
         self.name = None
+
+    def get_pre_brother(self, index):
+        """
+        获取它前 index 位的兄弟
+        :param index: ..
+        :return: 兄弟
+        """
+        self_index = 0
+        for i in range(0, len(self.parent.children)):
+            if self.parent.children[i] is self:
+                self_index = i
+        return self.parent.children[self_index - index]
 
 
 class Tree:

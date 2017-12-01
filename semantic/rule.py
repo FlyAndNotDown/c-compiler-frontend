@@ -7,22 +7,22 @@ from error import SemanticError
 1.  program -> {p.code = c0.code} define-list
 2.  define-list {p.code = c0.code + c1.code} -> define define-list
                 {p.code = None} | empty
-3.  define {} -> type ID define-type
+3.  define {} -> type ID define-type {c2.fun_name = c1.lexical}
 4.  define-type {p.define = 'var' p.length = c0.length} -> var-define-follow
-                {p.define = 'fun' p.code = c0.code p.types = c0.types p.names = c0.names} | fun-define-follow
+                {p.define = 'fun' p.code = c0.code p.types...} | fun-define-follow {c0.fun_name = p.fun_name}
 5.  var-define-follow {p.length = 1} -> ;
                  {p.length = c1.lexical} | [ NUM ] ;
 6.  type {p.type = c0.lexical} -> int
          {p.type = c0.lexical}    | void
-7.  fun-define-follow {p.code = c3.code p.types = c1.types p.names = c1.names} -> ( params ) code-block
+7.  fun-define-follow {p.code = c3.code p.types = c1.types p.names = c1.names} -> ( params ) code-block {c3.fun_name = p.fun_name}
 8.  params {p.types = c0.types p.names = c0.names} -> param-list
             {p.types = None} | empty
 9.  param-list {p.types = c0.type + c1.types ...} -> param param-follow
 10. param-follow {p.types = c1.type + c2.types ...} -> , param param-follow
                  {p.types = None} | empty
 11. param {p.type = c0.type ...} -> type ID array-subscript
-12. array-subscript -> [ ]
-                | empty
+12. array-subscript {p.length = 2} -> [ ]
+                {p.length = 1} | empty
 13. code-block -> { local-define-list code-list }
 14. local-define-list -> local-var-define local-define-list
                 | empty
@@ -200,10 +200,33 @@ class Define0P(SemanticRule):
                 )
                 # 为该函数新建一张局部变量表
                 symbol_table_pool.new_local_var_table(node.children[1].lexical)
+                # 将形参都填入该表
+                for i in range(0, len(node.children[2].types)):
+                    width = 0
+                    if node.children[2].types[i] == 'int':
+                        width = 4
+                    if node.children[2].types[i] == 'array':
+                        width = 0
+                    symbol_table_pool.query_local_var_table(node.children[1].lexical).append(
+                        LocalVarItem(
+                            node.children[2].names[i],
+                            node.children[2].types[i],
+                            width,
+                            True
+                        )
+                    )
                 # 添加代码
                 node.code.append(node.children[1].lexical + ':')
                 for c in node.children[2].code:
                     node.code.append(c)
+
+
+class Define0C2(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        node.fun_name = node.get_pre_brother(1).lexical
 
 
 # 4(1)
@@ -229,6 +252,14 @@ class DefineType1P(SemanticRule):
             node.types.append(t)
         for n in node.children[0].names:
             node.names.append(n)
+
+
+class DefineType1C0(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        node.fun_name = node.parent.fun_name
 
 
 # 5(1)
@@ -281,6 +312,14 @@ class FunDefineFollow0P(SemanticRule):
             node.names.append(n)
 
 
+class FunDefineFollow0C3(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        node.fun_name = node.parent.fun_name
+
+
 # 8(1)
 class Params0P(SemanticRule):
     def __init__(self, node):
@@ -317,7 +356,6 @@ class ParamList0P(SemanticRule):
             node.names.append(n)
 
 
-
 # 10(1)
 class ParamFollow0P(SemanticRule):
     def __init__(self, node):
@@ -342,3 +380,44 @@ class ParamFollow1P(SemanticRule):
         node.names.claer()
 
 
+# 11
+class Param0P(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        if node.children[2].length == 2:
+            node.type = 'array'
+        if node.children[2].length == 1 and node.children[0].type == 'int':
+            node.type = 'int'
+        if node.children[0].type == 'void':
+            return SemanticRule('不能定义void型的函数参数')
+        node.name = node.children[1].lexical
+
+
+# 12(1)
+class ArraySubscript0P(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        node.length = 2
+
+
+# 12(2)
+class ArraySubscript1P(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        node.length = 1
+
+
+# 13
+class CodeBlock0P(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        # TODO
+        pass
