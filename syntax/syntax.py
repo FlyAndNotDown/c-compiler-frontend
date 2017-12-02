@@ -528,6 +528,8 @@ class Node:
         self.types = list()
         self.names = list()
         self.name = None
+        self.fun_name = None
+        self.index = None
 
     def get_pre_brother(self, index):
         """

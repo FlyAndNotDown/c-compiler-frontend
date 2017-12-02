@@ -1,5 +1,6 @@
 from semantic.symbol import *
 from error import SemanticError
+from semantic.code import get_temp_block_name, get_temp_var_name
 
 
 """
@@ -23,20 +24,20 @@ from error import SemanticError
 11. param {p.type = c0.type ...} -> type ID array-subscript
 12. array-subscript {p.length = 2} -> [ ]
                 {p.length = 1} | empty
-13. code-block -> { local-define-list code-list }
-14. local-define-list -> local-var-define local-define-list
+13. code-block {p.code = c2.code} -> { local-define-list{c1.fun_name = p.fun_name} code-list{c2.fun_name = p.fun_name} }
+14. local-define-list -> local-var-define{c0.fun_name = p.fun_name} local-define-list{c0.fun_name = p.fun_name}
                 | empty
 15. local-var-define -> type ID var-define-follow
-16. code-list -> code code-list
+16. code-list{p.code = c0.code + c1.code} -> code{c0.fun_name = p.fun_name} code-list{c0.fun_name = p.fun_name}
                 | empty
-17. code -> normal-statement
+17. code{p.code = c0.code} -> normal-statement{c0.fun_name = p.fun_name}
                 | selection-statement
                 | iteration-statement
                 | return-statement
 18. normal-statement -> ;
                 | ID normal-statement-follow
-19. normal-statement-follow -> var-follow = expression ;
-                | call-follow ;
+19. normal-statement-follow{p.type = 'eval' p.length = c0. p.index = c0. p.code = c2.code p.name = c2.name} -> var-follow = expression ;
+                {p.type = 'call'} | call-follow ;
 20. call-follow -> ( call-params )
 21. call-params -> call-param-list
                 | empty
@@ -99,6 +100,7 @@ class SemanticRule:
         :param node: 树节点
         """
         self.__node = node
+        self.errors = list()
 
     def __rule(self, node):
         """
@@ -112,6 +114,13 @@ class SemanticRule:
         执行语义规则
         """
         self.__rule(self.__node)
+
+    def have_no_errors(self):
+        """
+        是否没有错误
+        :return: 是否没有错误
+        """
+        return len(self.errors) == 0
 
 
 class SemanticRuleFactory:
@@ -159,17 +168,16 @@ class Define0P(SemanticRule):
         super().__init__(node)
 
     def __rule(self, node):
-        errors = list()
         # 如果定义的是变量
         if node.children[2].define == 'var':
             # type 不能为 void
             if node.children[0].type == 'void':
-                errors.append(SemanticError('不能定义void型的变量'))
+                self.errors.append(SemanticError('不能定义void型的变量'))
             # 如果定义的是int型
             if node.children[0].type == 'int':
                 # 先看一下全局变量表中有没有重定义变量
                 if symbol_table_pool.get_global_var_table().exist(node.children[1].lexical):
-                    errors.append(SemanticError('变量' + node.children[1].lexical + '重定义'))
+                    self.errors.append(SemanticError('变量' + node.children[1].lexical + '重定义'))
                 # 如果没有重定义
                 else:
                     # 根据是不是数组进行全局变量的添加
@@ -185,7 +193,7 @@ class Define0P(SemanticRule):
         if node.children[2].define == 'fun':
             # 看函数名是否重定义
             if symbol_table_pool.get_fun_table().exist(node.children[1].lexical):
-                errors.append('函数' + node.children[1].lexical + '重定义')
+                self.errors.append(SemanticRule('函数' + node.children[1].lexical + '重定义'))
             # 如果没有重定义
             else:
                 # 填入函数表
@@ -391,7 +399,7 @@ class Param0P(SemanticRule):
         if node.children[2].length == 1 and node.children[0].type == 'int':
             node.type = 'int'
         if node.children[0].type == 'void':
-            return SemanticRule('不能定义void型的函数参数')
+            self.errors.append(SemanticError('不能定义void型的函数参数'))
         node.name = node.children[1].lexical
 
 
@@ -419,5 +427,199 @@ class CodeBlock0P(SemanticRule):
         super().__init__(node)
 
     def __rule(self, node):
-        # TODO
-        pass
+        for c in node.children[2].code:
+            node.code.append(c)
+
+
+class CodeBlock0C1(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        node.fun_name = node.parent.fun_name
+
+
+class CodeBlock0C2(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        node.fun_name = node.parent.fun_name
+
+
+# 14
+class LocalDefineList0C0(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        node.fun_name = node.parent.fun_name
+
+
+class LocalDefineList0C1(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        node.fun_name = node.parent.fun_name
+
+
+# 15
+class LocalVarDefine0P(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        # 如果 type 不是 int，报错
+        if node.children[0].type == 'void':
+            self.errors.append(SemanticError('不能申明void型的变量'))
+        if node.children[0].type == 'int':
+            # 检查是否重定义
+            if symbol_table_pool.query_local_var_table(node.fun_name).exist(node.children[1].lexical):
+                self.errors.append(SemanticRule('变量' + node.fun_name + '重定义'))
+            # 如果没有重定义
+            else:
+                if node.children[2].length == 1:
+                    symbol_table_pool.query_local_var_table(node.fun_name).append(
+                        LocalVarItem(node.children[1].lexical, 'int', 4, False)
+                    )
+                else:
+                    symbol_table_pool.query_local_var_table(node.fun_name).append(
+                        LocalVarItem(node.children[1].lexical, 'array', 4 * node.children[2].length, False)
+                    )
+
+
+# 16(1)
+class CodeList0P(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        for c in node.children[0].code:
+            node.code.append(c)
+        for c in node.children[1].code:
+            node.code.append(c)
+
+
+class CodeList0C0(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        node.fun_name = node.parent.fun_name
+
+
+class CodeList0C1(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        node.fun_name = node.parent.fun_name
+
+
+# 16(2)
+class CodeList1P(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        node.code.clear()
+
+
+# 17(1)
+class Code0P(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        for c in node.children[0].code:
+            node.code.append(c)
+
+
+class Code0C0(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        node.fun_name = node.parent.fun_name
+
+
+# 17(2)
+class Code1P(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        for c in node.children[0].code:
+            node.code.append(c)
+
+
+# 17(3)
+class Code2P(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        for c in node.children[0].code:
+            node.code.append(c)
+
+
+# 17(4)
+class Code3P(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        for c in node.children[0].code:
+            node.code.append(c)
+
+
+# 18(1)
+class NormalStatement0P(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        node.code.clear()
+
+
+# 18(2)
+class NormalStatement1P(SemanticRule):
+    def __init__(self, node):
+        super().__init__(node)
+
+    def __rule(self, node):
+        # 根据后者的类型来确认行为
+        # 如果是赋值
+        if node.children[1].type == 'eval':
+            # 查看被赋值的变量是否在符号表之中
+            if symbol_table_pool.query_local_var_table(node.fun_name).exist(node.children[0].lexical):
+                if node.children[1].length == 1:
+                    node.code.append(node.children[0].lexical + ' := ' + node.children[2].name)
+                    for c in node.children[2].code:
+                        node.code.append(c)
+                else:
+                    error = False
+                    if symbol_table_pool.query_local_var_table(
+                        node.fun_name
+                    ).query(node.children[0].lexical) is LocalVarRecord:
+                        if node.children[1].index > symbol_table_pool.query_local_var_table(
+                            node.fun_name
+                        ).query(node.children[0].lexical).symbol.width / 4:
+                            self.errors.append(SemanticError('数组访问越界'))
+                            error = True
+                    else:
+                        if node.children[1].index > symbol_table_pool.query_local_var_table(
+                            node.fun_name
+                        ).query(node.children[0].lexical).width / 4:
+                            self.errors.append(SemanticError('数组访问越界'))
+                            error = True
+                    if not error:
+                        node.code.append(node.children[0].lexical + '[' + node.children[1].index + ']' +
+                                         ' := ' + node.children[2].name)
+                        for c in node.children[2].code:
+                            node.code.append(c)
+        # 如果是调用
+        if node.children[1].type == 'call':
+            # TODO
+            pass
