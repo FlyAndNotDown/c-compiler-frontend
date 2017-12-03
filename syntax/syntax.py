@@ -520,6 +520,9 @@ class Node:
         self.parent = None
 
         # 属性
+        self.code = list()
+        self.type = None
+        self.id = None
 
     def get_pre_brother(self, index):
         """

@@ -5,21 +5,21 @@ from semantic.code import get_temp_block_name, get_temp_var_name
 
 """
 添加语义规则的文法
-0.  program -> define-list
-1.  define-list -> define define-list
-                 | empty
-2.  define -> type ID define-type
-3.  define-type -> var-define-follow
-                 | fun-define-follow
-4.  var-define-follow -> ;
-                 | [ NUM ] ;
-5.  type ->    int
-             | void
-6.  fun-define-follow -> ( params ) code-block
-7.  params -> param-list
-                | empty
-8.  param-list -> param param-follow
-9. param-follow -> , param param-follow
+0.  program{code} ->{.init} define-list
+1.  define-list{code} -> define define-list
+                {code} | empty
+2.  define{code} -> type ID define-type{type id}
+3.  define-type{code} ->{.judge} var-define-follow{type id}
+                {code} |{.judge} fun-define-follow{return_type id}
+4.  var-define-follow ->{.enter} ;
+                 | [ NUM{.enter} ] ;
+5.  type ->{type}   int
+         |{type} void
+6.  fun-define-follow{code} -> ( params{return_type id} ) code-block{id}
+7.  params{.enter} -> param-list
+               {.enter} | empty
+8.  param-list{param_types param_names} -> param param-follow
+9. param-follow{.judge} -> , param param-follow
                 | empty
 10. param -> type ID array-subscript
 11. array-subscript -> [ ]
@@ -131,8 +131,172 @@ class SemanticRuleFactory:
         pass
 
 
-# 1
-class P0L(SemanticRule):
+# S 产生式开始
+# E 产生式结束
+# CN 产生式第N个元素应用之后
+
+
+# 0
+class Program0S(SemanticRule):
     def __rule(self, node):
-        # TODO
-        pass
+        symbol_table_pool.init()
+
+
+class Program0E(SemanticRule):
+    def __rule(self, node):
+        for c in node.children[0].code:
+            node.code.append(c)
+
+
+# 1
+class DefineList0E(SemanticRule):
+    def __rule(self, node):
+        for c in node.children[0].code:
+            node.code.append(c)
+        for c in node.children[1].code:
+            node.code.append(c)
+
+
+class DefineList1E(SemanticRule):
+    def __rule(self, node):
+        node.code.clear()
+
+
+# 2
+class Define0E(SemanticRule):
+    def __rule(self, node):
+        for c in node.children[2].code:
+            node.code.append(c)
+
+
+class Define0C2(SemanticRule):
+    def __rule(self, node):
+        node.type = node.get_pre_brother(2).type
+        node.id = node.get_pre_brother(1).lexical
+
+
+# 3
+class DefineType0S(SemanticRule):
+    def __rule(self, node):
+        # 检查 type 是否是 void
+        if node.type == 'void':
+            self.errors.append(SemanticError('变量' + node.id + '不能定义为void类型'))
+        if node.type == 'int':
+            # 检查是否重定义
+            if symbol_table_pool.global_var_table.exist(node.id):
+                self.errors.append(SemanticError('变量' + node.id + '重定义'))
+
+
+class DefineType0C0(SemanticRule):
+    def __rule(self, node):
+        node.type = node.parent.type
+        node.id = node.parent.id
+
+
+class DefineType0E(SemanticRule):
+    def __rule(self, node):
+        node.code.clear()
+
+
+class DefineType1S(SemanticRule):
+    def __rule(self, node):
+        # 检查是否重定义
+        if symbol_table_pool.fun_table.exist(node.id):
+            self.errors.append(SemanticRule('函数名' + node.id + '重定义'))
+
+
+class DefineType1C0(SemanticRule):
+    def __rule(self, node):
+        node.return_type = node.parent.type
+        node.id = node.parent.id
+
+
+class DefineType1E(SemanticRule):
+    def __rule(self, node):
+        for c in node.children[0].code:
+            node.code.append(c)
+
+
+# 4
+
+
+# 4
+class VarDefineFollow0S(SemanticRule):
+    def __rule(self, node):
+        symbol_table_pool.global_var_table.append(
+            GlobalVar(node.id, 'int', 4)
+        )
+
+
+class VarDefineFollow0C1(SemanticRule):
+    def __rule(self, node):
+        symbol_table_pool.global_var_table.append(
+            GlobalVar(node.parent.id, 'array', 4 * node.lexical)
+        )
+
+
+# 5
+class Type0S(SemanticRule):
+    def __rule(self, node):
+        node.type = 'int'
+
+
+class Type1S(SemanticRule):
+    def __rule(self, node):
+        node.type = 'void'
+
+
+# 6
+class FunDefineFollow0E(SemanticRule):
+    def __rule(self, node):
+        for c in node.children[3].code:
+            node.code.append(c)
+
+
+class FunDefineFollow0C1(SemanticRule):
+    def __rule(self, node):
+        node.return_type = node.parent.return_type
+        node.id = node.parent.id
+
+
+class FunDefineFollow0C3(SemanticRule):
+    def __rule(self, node):
+        node.id = node.parent.id
+
+
+# 7
+class Params0E(SemanticRule):
+    def __rule(self, node):
+        symbol_table_pool.append(
+            LocalVarTable(node.id, symbol_table_pool.global_var_table)
+        )
+        symbol_table_pool.fun_table.append(
+            Fun(node.id, node.children[0].param_types, node.return_type, symbol_table_pool.query(node.id))
+        )
+        for i in range(0, len(node.children[0].param_types)):
+            symbol_table_pool.query(node.id).append(
+                LocalVar(node.children[0].param_names[i], node.children[0].param_types[i], 4, True)
+            )
+
+
+class Param1E(SemanticRule):
+    def __rule(self, node):
+        symbol_table_pool.append(
+            LocalVarTable(node.id, symbol_table_pool.global_var_table)
+        )
+        symbol_table_pool.fun_table.append(
+            Fun(node.id, [], node.return_type, symbol_table_pool.query(node.id))
+        )
+
+
+# 8
+class ParamList0E(SemanticRule):
+    def __rule(self, node):
+        node.param_types.append(node.children[0].param_type)
+        node.param_names.append(node.children[0].param_name)
+        for t in node.children[1].param_types:
+            node.param_types.append(t)
+        for n in node.children[1].param_names:
+            node.param_names.append(n)
+
+

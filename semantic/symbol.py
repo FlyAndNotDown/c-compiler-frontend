@@ -63,50 +63,38 @@ class SymbolTablePool:
     符号表池
     """
     def __init__(self):
-        self.__global_var_table = GlobalVarTable()
-        self.__fun_table = FunTable()
-        self.__local_var_tables = list()
-
-    def query_local_var_table(self, table_name):
         """
-        给定名字查找局部变量表
-        :param table_name: 表名
+        构造
+        """
+        self.global_var_table = None
+        self.local_var_tables = None
+        self.fun_table = None
+
+    def init(self):
+        """
+        初始化符号表池
+        """
+        self.global_var_table = GlobalVarTable()
+        self.local_var_tables = list()
+        self.fun_table = FunTable()
+
+    def query(self, local_var_table_name):
+        """
+        查询局部变量表
+        :param local_var_table_name: 表名
         :return: 局部变量表
         """
-        for table in self.__local_var_tables:
-            if table.name == table_name:
+        for table in self.local_var_tables:
+            if table.name == local_var_table_name:
                 return table
         return None
 
-    def new_local_var_table(self, name):
+    def append(self, local_var_table):
         """
-        新建一张局部变量表
-        :param name: 表名
+        添加一张局部变量表
+        :param local_var_table: 局部变量表
         """
-        self.__local_var_tables.append(LocalVarTable(name))
-        # 将所有的全局变量添加到表中
-        for i in range(0, self.get_global_var_table().num()):
-            self.query_local_var_table(name).append(
-                LocalVarRecord(
-                    self.get_global_var_table().get(i).name,
-                    self.get_global_var_table().get(i),
-                    self.get_global_var_table()
-                )
-            )
-
-    def get_global_var_table(self):
-        """
-        获取全局变量表
-        :return: 全局变量表
-        """
-        return self.__global_var_table
-
-    def get_fun_table(self):
-        """
-        获取函数表
-        :return: 函数表
-        """
-        return self.__fun_table
+        self.local_var_tables.append(local_var_table)
 
 
 class GlobalVarTable(SymbolTable):
@@ -114,123 +102,94 @@ class GlobalVarTable(SymbolTable):
     全局变量表
     """
     def __init__(self):
+        """
+        构造
+        :param name:
+        """
         super().__init__()
-        # 等实际装填了再更改地址
-        self.__address = 0
         self.__width = 0
 
     def append(self, symbol):
         """
-        添加一个全局变量
+        添加符号
         :param symbol: 符号
         """
         self.__table.append(symbol)
         self.__table[-1].offset = self.__width
         self.__width += self.__table[-1].width
 
-    def get_var_address(self, name):
-        """
-        获取变量的实际地址
-        :param name: 变量名
-        :return: 变量的实际地址
-        """
-        return self.__address + self.query(name).offset
 
-    def array_index_access_out(self, name, index):
-        """
-        检查数组访问越界
-        :param name: 符号名
-        :param index: 数组访问索引
-        :return: 是否越界
-        """
-        return index > self.query(name).width / 4 - 1
-
-
-class GlobalVarItem(Symbol):
+class GlobalVar(Symbol):
     """
-    全局变量表项
+    全局变量
     """
     def __init__(self, g_name, g_type, g_width):
+        """
+        全局变量
+        :param g_name: 名字
+        :param g_type: 类型
+        :param g_width: 长度
+        """
         super().__init__(g_name)
         self.type = g_type
         self.width = g_width
-        self.offset = None
 
 
 class LocalVarTable(SymbolTable):
     """
     局部变量表
     """
-    def __init__(self, name):
+    def __init__(self, name, global_var_table):
+        """
+        构造
+        :param name: 表名
+        :param global_var_table 全局变量表
+        """
         super().__init__()
         self.name = name
-        self.__address = 0
+        self.outer = global_var_table
         self.__width = 0
 
-    def append(self, symbol_record, is_record=False):
+    def append(self, symbol):
         """
-        添加一个符号或记录到符号表
-        :param symbol_record: 符号或记录
-        :param is_record: 是否为记录
+        填入新符号
+        :param symbol:
         """
-        if is_record:
-            self.__table.append(symbol_record)
-        else:
-            self.__table.append(symbol_record)
-            self.__table[-1].offset = self.__width
-            self.__width += self.__table[-1].width
+        self.__table.append(symbol)
+        self.__table[-1].offset = self.__width
+        self.__width += self.__table[-1].offset
 
-    def get_var_address(self, name):
+    def exist(self, name):
         """
-        获取变量的实际地址
-        :param name: 变量名
-        :return: 变量的实际地址
-        """
-        return self.__address + self.query(name).offset
-
-    def is_array(self, name):
-        """
-        判断是否为数组
+        是否已经存在
         :param name: 符号名
         :return: True/False
         """
-        if type(self.query(name)) == LocalVarItem:
-            return self.query(name).type == 'array'
+        if self.outer.exist(name):
+            return True
         else:
-            return self.query(name).symbol.type == 'array'
-
-    def array_index_access_out(self, name, index):
-        """
-        数组访问越界检查
-        :return: 是否越界
-        """
-        if type(self.query(name)) == LocalVarItem:
-            return index > self.query(name).width / 4 - 1
-        else:
-            return index > self.query(name).table.query(name).width / 4 - 1
+            for symbol in self.__table:
+                if symbol.name == name:
+                    return True
+            return False
 
 
-class LocalVarItem(Symbol):
+class LocalVar(Symbol):
     """
-    局部变量表项
+    局部变量
     """
     def __init__(self, l_name, l_type, l_width, l_is_param):
+        """
+        构造
+        :param l_name: 名字
+        :param l_type: 类型
+        :param l_width: 占空间
+        :param l_is_param: 是否为参数
+        """
         super().__init__(l_name)
         self.type = l_type
         self.width = l_width
-        self.offset = None
-        # 是否为形参
         self.is_param = l_is_param
-
-
-class LocalVarRecord(Symbol):
-    """
-    局部变量表引用
-    """
-    def __init__(self, l_name, l_symbol, l_table):
-        super().__init__(l_name)
-        self.symbol = l_symbol
-        self.table = l_table
 
 
 class FunTable(SymbolTable):
@@ -238,6 +197,9 @@ class FunTable(SymbolTable):
     函数表
     """
     def __init__(self):
+        """
+        构造
+        """
         super().__init__()
 
     def append(self, symbol):
@@ -248,10 +210,14 @@ class FunTable(SymbolTable):
         self.__table.append(symbol)
 
 
-class FunItem(Symbol):
+class Fun(Symbol):
     """
-    函数表项
+    函数
     """
-    def __init__(self, f_name, f_type):
-        super().__init__(f_name)
-        self.type = f_type
+    def __init__(self, name, param_types, return_type, local_var_table):
+        super().__init__(name)
+        self.param_types = list()
+        for p in param_types:
+            self.param_types.append(p)
+        self.return_type = return_type
+        self.table = local_var_table
