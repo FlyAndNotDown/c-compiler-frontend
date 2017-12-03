@@ -136,6 +136,15 @@ class GlobalVarTable(SymbolTable):
         """
         return self.__address + self.query(name).offset
 
+    def array_index_access_out(self, name, index):
+        """
+        检查数组访问越界
+        :param name: 符号名
+        :param index: 数组访问索引
+        :return: 是否越界
+        """
+        return index > self.query(name).width / 4 - 1
+
 
 class GlobalVarItem(Symbol):
     """
@@ -178,6 +187,27 @@ class LocalVarTable(SymbolTable):
         :return: 变量的实际地址
         """
         return self.__address + self.query(name).offset
+
+    def is_array(self, name):
+        """
+        判断是否为数组
+        :param name: 符号名
+        :return: True/False
+        """
+        if type(self.query(name)) == LocalVarItem:
+            return self.query(name).type == 'array'
+        else:
+            return self.query(name).symbol.type == 'array'
+
+    def array_index_access_out(self, name, index):
+        """
+        数组访问越界检查
+        :return: 是否越界
+        """
+        if type(self.query(name)) == LocalVarItem:
+            return index > self.query(name).width / 4 - 1
+        else:
+            return index > self.query(name).table.query(name).width / 4 - 1
 
 
 class LocalVarItem(Symbol):
