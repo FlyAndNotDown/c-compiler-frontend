@@ -527,6 +527,10 @@ class Node:
         self.fun = None
         self.num = None
         self.names = list()
+        self.bool = None
+        self.op = None
+        self.add = None
+        self.mul = None
 
     def get_pre_brother(self, index):
         """
