@@ -173,6 +173,28 @@ class LocalVarTable(SymbolTable):
                     return True
             return False
 
+    def get_params_num(self):
+        """
+        获取参数个数
+        :return: 参数个数
+        """
+        num = 0
+        for symbol in self.__table:
+            if symbol.is_param:
+                num += 1
+        return num
+
+    def get_params(self):
+        """
+        获取参数列表
+        :return: 参数列表
+        """
+        params = list()
+        for symbol in self.__table:
+            if symbol.is_param:
+                params.append(symbol)
+        return params
+
 
 class LocalVar(Symbol):
     """
@@ -214,10 +236,8 @@ class Fun(Symbol):
     """
     函数
     """
-    def __init__(self, name, param_types, return_type, local_var_table):
+    def __init__(self, name, return_type, local_var_table):
         super().__init__(name)
         self.param_types = list()
-        for p in param_types:
-            self.param_types.append(p)
         self.return_type = return_type
         self.table = local_var_table
