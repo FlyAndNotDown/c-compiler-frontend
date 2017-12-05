@@ -2,7 +2,8 @@
 语法分析
 """
 from syntax.rule import Sign, Production, terminal_sign_type, non_terminal_sign_type, productions, grammar_start
-from error import SyntaxRuleError, SyntaxError
+from error import SyntaxRuleError, SyntaxError, SemanticRuleError
+from semantic.rule import SemanticRule, SemanticError, SemanticRuleFactory
 
 
 class PredictingAnalysisTable:
@@ -520,6 +521,7 @@ class Node:
         self.parent = None
 
         # 属性
+        self.lexical = None
         self.code = list()
         self.type = None
         self.id = None
@@ -677,41 +679,77 @@ class Syntax:
         # 立下 flag
         flag = True
         while flag:
-            # 如果 top 是非终结符
-            if stack.top().data.is_non_terminal_sign():
-                # 查看分析表
-                production = self.__pa_table.get_production(stack.top().data, inputs[input_index])
-                # 如果分析表对应位置存有产生式
-                if production:
-                    # 将语法树按照产生式进行生长
-                    for sign in production.right:
-                        stack.top().children.append(Node(Sign(sign.type)))
-                    # 将 top 出栈
-                    top = stack.pop()
-                    # 将 top 的孩子节点反序入栈
-                    for child in top.children[::-1]:
-                        stack.push(child)
-                        # TODO 同时进行相应的语义动作
-                # 如果分析表中存放着错误信息
-                else:
-                    self.__error = SyntaxError('语法错误 ' + inputs[input_index].str, inputs[input_index].line)
+            # 如果栈顶是语义动作
+            if isinstance(stack.top(), SemanticRule):
+                stack.top().execute()
+                if len(stack.top().errors) > 0:
+                    self.__error = stack.top().errors[-1]
                     break
-            # 如果 top 是终结符
+                else:
+                    stack.pop()
+            # 如果栈顶是符号
             else:
-                # 如果 top = input
-                if stack.top().data.type == inputs[input_index].type:
-                    # 如果 top = #，宣布分析成功
-                    if stack.top().data.type == 'pound':
-                        flag = False
-                    # 如果 top != #
+                # 如果 top 是非终结符
+                if stack.top().data.is_non_terminal_sign():
+                    # 查看分析表
+                    production = self.__pa_table.get_production(stack.top().data, inputs[input_index])
+                    # 如果分析表对应位置存有产生式
+                    if production:
+                        # 判断语义规则是否合法
+                        if len(production.right) != len(production.semantic_children):
+                            self.__error = SemanticRuleError('语义规则数量与产生式右边数量不一致 ' + production.str)
+                            break
+
+                        # 执行 start 语义
+                        semantic_start = SemanticRuleFactory.get_instance(production.semantic_start, stack.top())
+                        if semantic_start:
+                            semantic_start.execute()
+                            if len(semantic_start.errors) > 0:
+                                self.__error = semantic_start.errors[-1]
+                                break
+
+                        # 将语法树按照产生式进行生长
+                        for i in range(0, len(production.right)):
+                            stack.top().children.append(Node(Sign(production.right[i].type)))
+
+                        # 将 top 出栈
+                        top = stack.pop()
+
+                        # 将 end 语义规则入栈
+                        semantic_end = SemanticRuleFactory.get_instance(production.semantic_end, top)
+                        if semantic_end:
+                            stack.push(semantic_end)
+
+                        # 将 top 的孩子节点反序入栈
+                        for i in range(len(production.right) - 1, -1, -1):
+                            # for child in top.children[::-1]:
+                            semantic_child = SemanticRuleFactory.get_instance(production.semantic_children[i],
+                                                                              top.children[i])
+                            if semantic_child:
+                                stack.push(semantic_child)
+                            stack.push(top.children[i])
+                    # 如果分析表中存放着错误信息
                     else:
-                        # 将 top 出栈，让 input_index 自增
-                        stack.pop()
-                        input_index += 1
-                # 如果 top != input
+                        self.__error = SyntaxError('语法错误 ' + inputs[input_index].str, inputs[input_index].line)
+                        break
+                # 如果 top 是终结符
                 else:
-                    self.__error = SyntaxError('语法错误 ' + inputs[input_index].str, inputs[input_index].line)
-                    break
+                    # 如果 top = input
+                    if stack.top().data.type == inputs[input_index].type:
+                        # 如果 top = #，宣布分析成功
+                        if stack.top().data.type == 'pound':
+                            flag = False
+                        # 如果 top != #
+                        else:
+                            # 计算 top 的 lexical 属性
+                            stack.top().lexical = inputs[input_index].str
+                            # 将 top 出栈，让 input_index 自增
+                            stack.pop()
+                            input_index += 1
+                    # 如果 top != input
+                    else:
+                        self.__error = SyntaxError('语法错误 ' + inputs[input_index].str, inputs[input_index].line)
+                        break
 
         if self.__error:
             return False

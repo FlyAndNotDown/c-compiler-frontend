@@ -61,3 +61,8 @@ class SemanticError(Error):
     """
     def __init__(self, info):
         super().__init__(info)
+
+
+class SemanticRuleError(Error):
+    def __init__(self, info):
+        super().__init__(info)

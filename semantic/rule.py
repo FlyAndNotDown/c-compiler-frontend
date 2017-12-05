@@ -100,7 +100,7 @@ class SemanticRule:
         构造
         :param node: 树节点
         """
-        self.__node = node
+        self.node = node
         self.errors = list()
 
     def __rule(self, node):
@@ -114,7 +114,7 @@ class SemanticRule:
         """
         执行语义规则
         """
-        self.__rule(self.__node)
+        self.__rule(self.node)
 
     def have_no_errors(self):
         """
@@ -160,7 +160,7 @@ class SemanticRuleFactory:
         if rule_key == 'DefineType1C0':
             return DefineType1C0(node)
         if rule_key == 'DefineType1E':
-            return DefineType1E
+            return DefineType1E(node)
 
         # 4
         if rule_key == 'VarDefineFollow0E':
@@ -486,11 +486,17 @@ class Program0S(SemanticRule):
     def __rule(self, node):
         symbol_table_pool.init()
 
+    def execute(self):
+        self.__rule(self.node)
+
 
 class Program0E(SemanticRule):
     def __rule(self, node):
         for c in node.children[0].code:
             node.code.append(c)
+
+    def execute(self):
+        self.__rule(self.node)
 
 
 # 1
@@ -501,10 +507,16 @@ class DefineList0E(SemanticRule):
         for c in node.children[1].code:
             node.code.append(c)
 
+    def execute(self):
+        self.__rule(self.node)
+
 
 class DefineList1E(SemanticRule):
     def __rule(self, node):
         node.code.clear()
+
+    def execute(self):
+        self.__rule(self.node)
 
 
 # 2
@@ -513,15 +525,24 @@ class Define0E(SemanticRule):
         for c in node.children[2].code:
             node.code.append(c)
 
+    def execute(self):
+        self.__rule(self.node)
+
 
 class Define0C2(SemanticRule):
     def __rule(self, node):
         node.type = node.get_pre_brother(2).type
         node.id = node.get_pre_brother(1).lexical
 
+    def execute(self):
+        self.__rule(self.node)
+
 
 # 3
 class DefineType0S(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         # 检查 type 是否是 void
         if node.type == 'void':
@@ -533,6 +554,9 @@ class DefineType0S(SemanticRule):
 
 
 class DefineType0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         if node.children[0].type == 'var':
             symbol_table_pool.global_var_table.append(
@@ -545,12 +569,18 @@ class DefineType0E(SemanticRule):
 
 
 class DefineType0C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.type = node.parent.type
         node.id = node.parent.id
 
 
 class DefineType1S(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         # 检查是否重定义
         if symbol_table_pool.fun_table.exist(node.id):
@@ -558,12 +588,18 @@ class DefineType1S(SemanticRule):
 
 
 class DefineType1C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.return_type = node.parent.type
         node.fun = node.parent.id
 
 
 class DefineType1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[0].code:
             node.code.append(c)
@@ -571,11 +607,17 @@ class DefineType1E(SemanticRule):
 
 # 4
 class VarDefineFollow0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.type = 'var'
 
 
 class VarDefineFollow1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.type = 'array'
         node.length = node.children[1].lexical
@@ -583,35 +625,53 @@ class VarDefineFollow1E(SemanticRule):
 
 # 5
 class Type0S(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.type = 'int'
 
 
 class Type1S(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.type = 'void'
 
 
 # 6
 class FunDefineFollow0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[3].code:
             node.code.append(c)
 
 
 class FunDefineFollow0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.return_type = node.parent.return_type
         node.id = node.parent.id
 
 
 class FunDefineFollow0C3(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 # 7
 class Params0S(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         symbol_table_pool.append(
             LocalVarTable(node.id, symbol_table_pool.global_var_table)
@@ -622,11 +682,17 @@ class Params0S(SemanticRule):
 
 
 class Params0C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.id = node.parent.id
 
 
 class Params1S(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         symbol_table_pool.append(
             LocalVarTable(node.id, symbol_table_pool.global_var_table)
@@ -638,28 +704,43 @@ class Params1S(SemanticRule):
 
 # 8
 class ParamList0C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.id = node.parent.id
 
 
 class ParamList0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.id = node.parent.id
 
 
 # 9
 class ParamFollow0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.id = node.parent.id
 
 
 class ParamFollow0C2(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.id = node.parent.id
 
 
 # 10
 class Param0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         # 先判断 type 是否为 void
         if node.children[0].type == 'void':
@@ -681,17 +762,26 @@ class Param0E(SemanticRule):
 
 # 11
 class ArraySubscript0S(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.type = 'array'
 
 
 class ArraySubscript1S(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.type = 'var'
 
 
 # 12
 class CodeBlock0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.code.append(node.id + ':')
         for c in node.children[2].code:
@@ -699,28 +789,43 @@ class CodeBlock0E(SemanticRule):
 
 
 class CodeBlock0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class CodeBlock0C2(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 # 13
 class LocalDefineList0C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class LocalDefineList0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 # 14
 class LocalVarDefine0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         if node.children[0].type == 'void':
             self.errors.append(SemanticError('变量' + node.children[1].lexical + '不能定义为void类型'))
@@ -740,6 +845,9 @@ class LocalVarDefine0E(SemanticRule):
 
 # 15
 class CodeList0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[0].code:
             node.code.append(c)
@@ -748,78 +856,120 @@ class CodeList0E(SemanticRule):
 
 
 class CodeList0C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class CodeList0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class CodeList1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.code.clear()
 
 
 # 16
 class Code0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[0].code:
             node.code.append(c)
 
 
 class Code0C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class Code1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[0].code:
             node.code.append(c)
 
 
 class Code1C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class Code2E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[0].code:
             node.code.append(c)
 
 
 class Code2C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class Code3E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[0].code:
             node.code.append(c)
 
 
 class Code3C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 # 17
 class NormalStatement0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.code.clear()
 
 
 class NormalStatement1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[1].code:
             node.code.append(c)
 
 
 class NormalStatement1C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
         node.id = node.get_pre_brother(1).lexical
@@ -827,6 +977,9 @@ class NormalStatement1C1(SemanticRule):
 
 # 18
 class NormalStatementFollow0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         if node.children[0].type == 'var':
             for c in node.children[2].code:
@@ -841,16 +994,25 @@ class NormalStatementFollow0E(SemanticRule):
 
 
 class NormalStatementFollow0C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class NormalStatementFollow0C2(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class NormalStatementFollow1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[0].code:
             node.code.append(c)
@@ -858,6 +1020,9 @@ class NormalStatementFollow1E(SemanticRule):
 
 
 class NormalStatementFollow1C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
         node.id = node.parent.id
@@ -865,12 +1030,18 @@ class NormalStatementFollow1C0(SemanticRule):
 
 # 19
 class CallFollow0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[1].code:
             node.code.append(c)
 
 
 class CallFollow0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
         node.id = node.parent.id
@@ -878,6 +1049,9 @@ class CallFollow0C1(SemanticRule):
 
 # 20
 class CallParams0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         if symbol_table_pool.query(node.fun).get_params_num() != node.children[0].num:
             self.errors.append(SemanticError('函数体' + node.fun + '调用' + node.id + '的时候，参数数量不匹配'))
@@ -887,11 +1061,17 @@ class CallParams0E(SemanticRule):
 
 
 class CallParams0C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class CallParams1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         if symbol_table_pool.query(node.fun).get_params_num() != 0:
             self.errors.append(SemanticError('函数体' + node.fun + '调用' + node.id + '的时候，参数数量不匹配'))
@@ -899,6 +1079,9 @@ class CallParams1E(SemanticRule):
 
 # 21
 class CallParamList0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.num = 1 + node.children[1].num
         for c in node.children[0].code:
@@ -911,17 +1094,26 @@ class CallParamList0E(SemanticRule):
 
 
 class CallParamList0C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class CallParamList0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 # 22
 class CallParamFollow0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.num = 1 + node.children[2].num
         for c in node.children[1].code:
@@ -934,16 +1126,25 @@ class CallParamFollow0E(SemanticRule):
 
 
 class CallParamFollow0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class CallParamFollow0C2(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class CallParamFollow1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.num = 0
         node.code.clear()
@@ -952,6 +1153,9 @@ class CallParamFollow1E(SemanticRule):
 
 # 23
 class SelectionStatement0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         if not node.children[2].bool:
             self.errors.append(SemanticError('if-结构中的表达式不是bool表达式'))
@@ -974,24 +1178,36 @@ class SelectionStatement0E(SemanticRule):
 
 
 class SelectionStatement0C2(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 # 24
 class SelectionFollow0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[2].code:
             node.code.append(c)
 
 
 class SelectionFollow1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.code.clear()
 
 
 # 25
 class IterationStatement0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         judge_block = get_temp_block_name()
         iteration_block = get_temp_block_name()
@@ -1009,18 +1225,27 @@ class IterationStatement0E(SemanticRule):
 
 
 class IterationStatement0C2(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 # 26
 class IterationFollow0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[1].code:
             node.code.append(c)
 
 
 class IterationFollow1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[0].code:
             node.code.append(c)
@@ -1028,23 +1253,35 @@ class IterationFollow1E(SemanticRule):
 
 # 27
 class ReturnStatement0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[1].code:
             node.code.append(c)
 
 
 class ReturnStatement0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 # 28
 class ReturnFollow0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.code.append('return')
 
 
 class ReturnFollow1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[0].code:
             node.code.append(c)
@@ -1052,12 +1289,18 @@ class ReturnFollow1E(SemanticRule):
 
 
 class ReturnFollow1C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 # 29
 class VarFollow0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.type = 'array'
         node.name = node.children[1].name
@@ -1066,17 +1309,26 @@ class VarFollow0E(SemanticRule):
 
 
 class VarFollow0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class VarFollow1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.type = 'var'
 
 
 # 30
 class Expression0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.bool = node.children[1].bool
         if node.children[1].bool:
@@ -1094,17 +1346,26 @@ class Expression0E(SemanticRule):
 
 
 class Expression0C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class Expression0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 # 31
 class ExpressionFollow0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.bool = True
         node.op = node.children[0].lexical
@@ -1114,48 +1375,75 @@ class ExpressionFollow0E(SemanticRule):
 
 
 class ExpressionFollow0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class ExpressionFollow1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.bool = False
 
 
 # 32
 class RelOp0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.op = node.children[0].lexical
 
 
 class RelOp1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.op = node.children[0].lexical
 
 
 class RelOp2E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.op = node.children[0].lexical
 
 
 class RelOp3E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.op = node.children[0].lexical
 
 
 class RelOp4E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.op = node.children[0].lexical
 
 
 class RelOp5E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.op = node.children[0].lexical
 
 
 # 33
 class AdditiveExpr0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         if node.children[1].add:
             node.name = get_temp_var_name()
@@ -1172,17 +1460,26 @@ class AdditiveExpr0E(SemanticRule):
 
 
 class AdditiveExpr0C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class AdditiveExpr0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 # 34
 class AdditiveExprFollow0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.add = True
         node.op = node.children[0].op
@@ -1201,33 +1498,51 @@ class AdditiveExprFollow0E(SemanticRule):
 
 
 class AdditiveExprFollow0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class AdditiveExprFollow0C2(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class AdditiveExprFollow1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.add = False
 
 
 # 35
 class AddOp0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.op = node.children[0].lexical
 
 
 class AddOp1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.op = node.children[0].lexical
 
 
 # 36
 class Term0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         if node.children[1].mul:
             node.name = get_temp_var_name()
@@ -1244,17 +1559,26 @@ class Term0E(SemanticRule):
 
 
 class Term0C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class Term0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 # 37
 class TermFollow0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.mul = True
         node.op = node.children[0].op
@@ -1273,28 +1597,43 @@ class TermFollow0E(SemanticRule):
 
 
 class TermFollow0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class TermFollow0C2(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 # 38
 class MulOp0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.op = node.children[0].lexical
 
 
 class MulOp1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.op = node.children[0].lexical
 
 
 # 39
 class Factor0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[1].code:
             node.code.append(c)
@@ -1302,11 +1641,17 @@ class Factor0E(SemanticRule):
 
 
 class Factor0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class Factor1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[1].code:
             node.code.append(c)
@@ -1314,12 +1659,18 @@ class Factor1E(SemanticRule):
 
 
 class Factor1C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.id = node.get_pre_brother(1).lexical
         node.fun = node.parent.fun
 
 
 class Factor2E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.name = get_temp_var_name()
         node.code.append(node.name + ' := ' + node.children[0].lexical)
@@ -1327,6 +1678,9 @@ class Factor2E(SemanticRule):
 
 # 40
 class IdFactorFollow0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         if symbol_table_pool.query(node.fun).exist(node.id):
             if node.children[0].type == 'var':
@@ -1341,6 +1695,9 @@ class IdFactorFollow0E(SemanticRule):
 
 
 class IdFactorFollow1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         if symbol_table_pool.fun_table.exist(node.id):
             if node.children[1].num != symbol_table_pool.query(node.fun).get_params_num():
@@ -1357,6 +1714,9 @@ class IdFactorFollow1E(SemanticRule):
 
 # 41
 class Args0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         for c in node.children[0].code:
             node.code.append(c)
@@ -1364,6 +1724,9 @@ class Args0E(SemanticRule):
 
 
 class Args1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.code.clear()
         node.num = 0
@@ -1371,6 +1734,9 @@ class Args1E(SemanticRule):
 
 # 42
 class ArgList0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.num = 1 + node.children[1].num
         for c in node.children[0].code:
@@ -1383,17 +1749,26 @@ class ArgList0E(SemanticRule):
 
 
 class ArgList0C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class ArgList0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 # 43
 class ArgListFollow0E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.num = 1 + node.children[2].num
         for c in node.children[1].code:
@@ -1406,16 +1781,25 @@ class ArgListFollow0E(SemanticRule):
 
 
 class ArgListFollow0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class ArgListFollow0C2(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.fun = node.parent.fun
 
 
 class ArgListFollow1E(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
     def __rule(self, node):
         node.num = 0
         node.code.clear()
