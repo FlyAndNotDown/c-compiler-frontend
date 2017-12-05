@@ -46,12 +46,14 @@ class Production:
     """
     产生式
     """
-    def __init__(self, left_type, right_types):
+    def __init__(self, left_type, right_types, semantic_start, semantic_children, semantic_end):
         """
         产生式左边
         :param left_type: 产生式左边的符号类型
         :param right_types: 产生式右边的符号类型列表
-        :param rule_key: 语义规则关键字
+        :param semantic_start: 语义操作关键字 - 开始
+        :param semantic_children: 语义操作关键字 - 孩子
+        :param semantic_end: 语义操作关键字 - 结束
         """
         self.left = Sign(left_type)
         self.right = list()
@@ -62,6 +64,13 @@ class Production:
         self.str = self.left.type + ' ->'
         for i in self.right:
             self.str += ' ' + i.type
+
+        # 语义操作关键字
+        self.semantic_start = semantic_start
+        self.semantic_children = list()
+        for c in semantic_children:
+            self.semantic_children.append(c)
+        self.semantic_end = semantic_end
 
 
 """
@@ -231,92 +240,214 @@ non_terminal_sign_type = [
 
 # 文法产生式
 productions = [
-    Production('program', ['define-list']),
-    Production('define-list', ['define', 'define-list']),
-    Production('define-list', []),
-    Production('define', ['type', 'id', 'define-type']),
-    Production('define-type', ['var-define-follow']),
-    Production('define-type', ['fun-define-follow']),
-    Production('var-define-follow', ['semicolon']),
-    Production('var-define-follow', ['left-bracket', 'num', 'right-bracket', 'semicolon']),
-    Production('type', ['int']),
-    Production('type', ['void']),
-    Production('fun-define-follow', ['left-parentheses', 'params', 'right-parentheses', 'code-block']),
-    Production('params', ['param-list']),
-    Production('params', []),
-    Production('param-list', ['param', 'param-follow']),
-    Production('param-follow', ['comma', 'param', 'param-follow']),
-    Production('param-follow', []),
-    Production('param', ['type', 'id', 'array-subscript']),
-    Production('array-subscript', ['left-bracket', 'right-bracket']),
-    Production('array-subscript', []),
-    Production('code-block', ['left-brace', 'local-define-list', 'code-list', 'right-brace']),
-    Production('local-define-list', ['local-var-define', 'local-define-list']),
-    Production('local-define-list', []),
-    Production('local-var-define', ['type', 'id', 'var-define-follow']),
-    Production('code-list', ['code', 'code-list']),
-    Production('code-list', []),
-    Production('code', ['normal-statement']),
-    Production('code', ['selection-statement']),
-    Production('code', ['iteration-statement']),
-    Production('code', ['return-statement']),
+    # 0
+    Production('program', ['define-list'],
+               'Program0S', [None], 'Program0E'),
+    # 1
+    Production('define-list', ['define', 'define-list'],
+               None, [None, None], 'DefineList0E'),
+    Production('define-list', [],
+               None, [], 'DefineList1E'),
+    # 2
+    Production('define', ['type', 'id', 'define-type'],
+               None, [None, None, 'Define0C2'], 'Define0E'),
+    # 3
+    Production('define-type', ['var-define-follow'],
+               'DefineType0S', ['DefineType0C0'], 'DefineType0E'),
+    Production('define-type', ['fun-define-follow'],
+               'DefineType1S', ['DefineType1C0'], 'DefineType1E'),
+    # 4
+    Production('var-define-follow', ['semicolon'],
+               None, [None], 'VarDefineFollow0E'),
+    Production('var-define-follow', ['left-bracket', 'num', 'right-bracket', 'semicolon'],
+               None, [None, None, None, None], 'VarDefineFollow1E'),
+    # 5
+    Production('type', ['int'],
+               'Type0S', [None], None),
+    Production('type', ['void'],
+               'Type1S', [None], None),
+    # 6
+    Production('fun-define-follow', ['left-parentheses', 'params', 'right-parentheses', 'code-block'],
+               None, [None, 'FunDefineFollow0C1', None, 'FunDefineFollow0C3'], 'FunDefineFollow0E'),
+    # 7
+    Production('params', ['param-list'],
+               'Params0S', ['Params0C0'], None),
+    Production('params', [],
+               'Params1S', [], None),
+    # 8
+    Production('param-list', ['param', 'param-follow'],
+               None, ['ParamList0C0', 'ParamList0C1'], None),
+    # 9
+    Production('param-follow', ['comma', 'param', 'param-follow'],
+               None, [None, 'ParamFollow0C1', 'ParamFollow0C2'], None),
+    Production('param-follow', [],
+               None, [], None),
+    # 10
+    Production('param', ['type', 'id', 'array-subscript'],
+               None, [None, None, None], 'Param0E'),
+    # 11
+    Production('array-subscript', ['left-bracket', 'right-bracket'],
+               'ArraySubscript0S', [None, None], None),
+    Production('array-subscript', [],
+               'ArraySubscript1S', [], None),
+    # 12
+    Production('code-block', ['left-brace', 'local-define-list', 'code-list', 'right-brace'],
+               None, [None, 'CodeBlock0C1', 'CodeBlock0C2', None], 'CodeBlock0E'),
+    # 13
+    Production('local-define-list', ['local-var-define', 'local-define-list'],
+               None, ['LocalVarDefine0C0', 'LocalVarDefineFollow0C1'], None),
+    Production('local-define-list', [],
+               None, [], None),
+    # 14
+    Production('local-var-define', ['type', 'id', 'var-define-follow'],
+               None, [None, None, None], 'LocalVarDefine0E'),
+    # 15
+    Production('code-list', ['code', 'code-list'],
+               None, ['CodeList0C0', 'CodeList0C1'], 'CodeList0E'),
+    Production('code-list', [],
+               None, [], 'CodeList1E'),
+    # 16
+    Production('code', ['normal-statement'],
+               None, ['Code0C0'], 'Code0E'),
+    Production('code', ['selection-statement'],
+               None, ['Code1C0'], 'Code1E'),
+    Production('code', ['iteration-statement'],
+               None, ['Code2C0'], 'Code2E'),
+    Production('code', ['return-statement'],
+               None, ['Code3C0'], 'Code3E'),
     # Production('normal-statement', ['eval-statement', 'semicolon']),
     # Production('normal-statement', ['semicolon']),
-    Production('normal-statement', ['semicolon']),
-    Production('normal-statement', ['id', 'normal-statement-follow']),
-    Production('normal-statement-follow', ['var-follow', 'evaluate', 'expression', 'semicolon']),
-    Production('normal-statement-follow', ['call-follow', 'semicolon']),
-    Production('call-follow', ['left-parentheses', 'call-params', 'right-parentheses']),
-    Production('call-params', ['call-param-list']),
-    Production('call-params', []),
-    Production('call-param-list', ['expression', 'call-param-follow']),
-    Production('call-param-follow', ['comma', 'expression', 'call-param-follow']),
-    Production('call-param-follow', []),
+    # 17
+    Production('normal-statement', ['semicolon'],
+               None, [None], 'NormalStatement0E'),
+    Production('normal-statement', ['id', 'normal-statement-follow'],
+               None, [None, 'NormalStatement1C1'], 'NormalStatement1E'),
+    # 18
+    Production('normal-statement-follow', ['var-follow', 'evaluate', 'expression', 'semicolon'],
+               None, ['NormalStatementFollow0C0', None, 'NormalStatementFollow0C2', None], 'NormalStatementFollow0E'),
+    Production('normal-statement-follow', ['call-follow', 'semicolon'],
+               None, ['NormalStatementFollow1C0', None], 'NormalStatementFollow1E'),
+    # 19
+    Production('call-follow', ['left-parentheses', 'call-params', 'right-parentheses'],
+               None, [None, 'CallFollow0C1', None], 'CallFollow0E'),
+    # 20
+    Production('call-params', ['call-param-list'],
+               None, ['CallParams0C0'], 'CallParams0E'),
+    Production('call-params', [],
+               None, [], 'CallParams1E'),
+    # 21
+    Production('call-param-list', ['expression', 'call-param-follow'],
+               None, ['CallParamList0C0', 'CallParamList0C1'], 'CallParamList0E'),
+    # 22
+    Production('call-param-follow', ['comma', 'expression', 'call-param-follow'],
+               None, [None, 'CallParamFollow0C1', 'CallParamFollow0C2'], 'CallParamFollow0E'),
+    Production('call-param-follow', [],
+               None, [], 'CallParamFollow1E'),
+    # 23
     Production('selection-statement',
-               ['if', 'left-parentheses', 'expression', 'right-parentheses','left-brace',
-                'code-list', 'right-brace', 'selection-follow']),
-    Production('selection-follow', ['else', 'left-brace', 'code-list', 'right-brace']),
-    Production('selection-follow', []),
+               ['if', 'left-parentheses', 'expression', 'right-parentheses', 'left-brace',
+                'code-list', 'right-brace', 'selection-follow'],
+               None, [None, None, 'SelectionStatement0C2', None, None, None, None, None], 'SelectionStatement0E'),
+    # 24
+    Production('selection-follow', ['else', 'left-brace', 'code-list', 'right-brace'],
+               None, [None, None, None, None], 'SelectionFollow0E'),
+    Production('selection-follow', [],
+               None, [], 'SelectionFollow1E'),
+    # 25
     Production('iteration-statement', ['while', 'left-parentheses', 'expression',
-                                       'right-parentheses', 'iteration-follow']),
-    Production('iteration-follow', ['left-brace', 'code-list', 'right-brace']),
-    Production('iteration-follow', ['code']),
-    Production('return-statement', ['return', 'return-follow']),
-    Production('return-follow', ['semicolon']),
-    Production('return-follow', ['expression', 'semicolon']),
+                                       'right-parentheses', 'iteration-follow'],
+               None, [None, None, 'IterationStatement0C2', None, None], 'IterationStatement0E'),
+    # 26
+    Production('iteration-follow', ['left-brace', 'code-list', 'right-brace'],
+               None, [None, None, None], 'IterationFollow0E'),
+    Production('iteration-follow', ['code'],
+               None, [None], 'IterationFollow1E'),
+    # 27
+    Production('return-statement', ['return', 'return-follow'],
+               None, [None, 'ReturnStatement0C1'], 'ReturnStatement0E'),
+    # 28
+    Production('return-follow', ['semicolon'],
+               None, [None], 'ReturnFollow0E'),
+    Production('return-follow', ['expression', 'semicolon'],
+               None, ['ReturnFollow1C0', None], 'ReturnFollow1E'),
     # Production('eval-statement', ['var', 'evaluate', 'expression']),
     # Production('var', ['id', 'var-follow']),
-    Production('var-follow', ['left-bracket', 'expression', 'right-bracket']),
-    Production('var-follow', []),
-    Production('expression', ['additive-expr', 'expression-follow']),
-    Production('expression-follow', ['rel-op', 'additive-expr']),
-    Production('expression-follow', []),
-    Production('rel-op', ['smaller-equal']),
-    Production('rel-op', ['smaller']),
-    Production('rel-op', ['bigger']),
-    Production('rel-op', ['bigger-equal']),
-    Production('rel-op', ['equal']),
-    Production('rel-op', ['not-equal']),
-    Production('additive-expr', ['term', 'additive-expr-follow']),
-    Production('additive-expr-follow', ['add-op', 'term', 'additive-expr-follow']),
-    Production('additive-expr-follow', []),
-    Production('add-op', ['addition']),
-    Production('add-op', ['subtraction']),
-    Production('term', ['factor', 'term-follow']),
-    Production('term-follow', ['mul-op', 'factor', 'term-follow']),
-    Production('term-follow', []),
-    Production('mul-op', ['multiplication']),
-    Production('mul-op', ['division']),
-    Production('factor', ['left-parentheses', 'expression', 'right-parentheses']),
-    Production('factor', ['id', 'id-factor-follow']),
-    Production('factor', ['num']),
-    Production('id-factor-follow', ['var-follow']),
-    Production('id-factor-follow', ['left-parentheses', 'args', 'right-parentheses']),
-    Production('args', ['arg-list']),
-    Production('args', []),
-    Production('arg-list', ['expression', 'arg-list-follow']),
-    Production('arg-list-follow', ['comma', 'expression', 'arg-list-follow']),
-    Production('arg-list-follow', [])
+    # 29
+    Production('var-follow', ['left-bracket', 'expression', 'right-bracket'],
+               None, [None, 'VarFollow0C1', None], 'VarFollow0E'),
+    Production('var-follow', [],
+               None, [], 'VarFollow1E'),
+    # 30
+    Production('expression', ['additive-expr', 'expression-follow'],
+               None, ['Expression0C0', 'Expression0C1'], 'Expression0E'),
+    # 31
+    Production('expression-follow', ['rel-op', 'additive-expr'],
+               None, [None, 'ExpressionFollow0C1'], 'ExpressionFollow0E'),
+    Production('expression-follow', [],
+               None, [], 'ExpressionFollow1E'),
+    # 32
+    Production('rel-op', ['smaller-equal'],
+               None, [None], 'RelOp0E'),
+    Production('rel-op', ['smaller'],
+               None, [None], 'RelOp1E'),
+    Production('rel-op', ['bigger'],
+               None, [None], 'RelOp2E'),
+    Production('rel-op', ['bigger-equal'],
+               None, [None], 'RelOp3E'),
+    Production('rel-op', ['equal'],
+               None, [None], 'RelOp4E'),
+    Production('rel-op', ['not-equal'],
+               None, [None], 'RelOp5E'),
+    # 33
+    Production('additive-expr', ['term', 'additive-expr-follow'],
+               None, ['AdditiveExpr0C0', 'AdditiveExpr0C1'], 'AdditiveExpr0E'),
+    # 34
+    Production('additive-expr-follow', ['add-op', 'term', 'additive-expr-follow'],
+               None, [None, 'AdditiveExprFollow0C1', 'AdditiveExprFollow0C2'], 'AdditiveExprFollow0E'),
+    Production('additive-expr-follow', [],
+               None, [], 'AdditiveExprFollow1E'),
+    # 35
+    Production('add-op', ['addition'],
+               None, [None], 'AddOp0E'),
+    Production('add-op', ['subtraction'],
+               None, [None], 'AddOp1E'),
+    # 36
+    Production('term', ['factor', 'term-follow'],
+               None, ['Term0C0', 'Term0C1'], 'Term0E'),
+    # 37
+    Production('term-follow', ['mul-op', 'factor', 'term-follow'],
+               None, [None, 'TermFollow0C1', 'TermFollow0C2'], 'TermFollow0E'),
+    Production('term-follow', [],
+               None, [], None),
+    # 38
+    Production('mul-op', ['multiplication'],
+               None, [None], 'MulOp0E'),
+    Production('mul-op', ['division'],
+               None, [None], 'MulOp1E'),
+    # 39
+    Production('factor', ['left-parentheses', 'expression', 'right-parentheses'],
+               None, [None, 'Factor0C1', None], 'Factor0E'),
+    Production('factor', ['id', 'id-factor-follow'],
+               None, [None, 'Factor1C1'], 'Factor1E'),
+    Production('factor', ['num'],
+               None, [None], 'Factor2E'),
+    # 40
+    Production('id-factor-follow', ['var-follow'],
+               None, [None], 'IdFactorFollow0E'),
+    Production('id-factor-follow', ['left-parentheses', 'args', 'right-parentheses'],
+               None, [None, None, None], 'IdFactorFollow1E'),
+    # 41
+    Production('args', ['arg-list'],
+               None, [None], 'Args0E'),
+    Production('args', [],
+               None, [], 'Args1E'),
+    # 42
+    Production('arg-list', ['expression', 'arg-list-follow'],
+               None, ['ArgList0C0', 'ArgList0C1'], 'ArgList0E'),
+    Production('arg-list-follow', ['comma', 'expression', 'arg-list-follow'],
+               None, [None, 'ArgListFollow0C1', 'ArgListFollow0C2'], 'ArgListFollow0E'),
+    Production('arg-list-follow', [],
+               None, [], 'ArgListFollow1E')
 ]
 
 # 文法开始符号

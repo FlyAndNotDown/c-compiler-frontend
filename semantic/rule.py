@@ -179,7 +179,7 @@ class SemanticRuleFactory:
             return FunDefineFollow0E(node)
         if rule_key == 'FunDefineFollow0C1':
             return FunDefineFollow0C1(node)
-        if rule_key == 'FunDefineFOllow0C3':
+        if rule_key == 'FunDefineFollow0C3':
             return FunDefineFollow0C3(node)
 
         # 7
@@ -193,14 +193,14 @@ class SemanticRuleFactory:
         # 8
         if rule_key == 'ParamList0C0':
             return ParamList0C0(node)
-        if rule_key == 'ParamList0C2':
-            return ParamList0C2
+        if rule_key == 'ParamList0C1':
+            return ParamList0C1(node)
 
         # 9
         if rule_key == 'ParamFollow0C1':
             return ParamFollow0C1(node)
         if rule_key == 'ParamFollow0C2':
-            return ParamList0C2(node)
+            return ParamFollow0C2(node)
 
         # 10
         if rule_key == 'Param0E':
@@ -459,12 +459,22 @@ class SemanticRuleFactory:
         # 42
         if rule_key == 'ArgList0E':
             return ArgList0E(node)
+        if rule_key == 'ArgList0C0':
+            return ArgList0C0(node)
+        if rule_key == 'ArgList0C1':
+            return ArgList0C1(node)
 
         # 43
         if rule_key == 'ArgListFollow0E':
             return ArgListFollow0E(node)
+        if rule_key == 'ArgListFollow0C1':
+            return ArgListFollow0C1(node)
+        if rule_key == 'ArgListFollow0C2':
+            return ArgListFollow0C2(node)
         if rule_key == 'ArgListFollow1E':
             return ArgListFollow1E(node)
+
+        return None
 
 # S 产生式开始
 # E 产生式结束
@@ -632,7 +642,7 @@ class ParamList0C0(SemanticRule):
         node.id = node.parent.id
 
 
-class ParamList0C2(SemanticRule):
+class ParamList0C1(SemanticRule):
     def __rule(self, node):
         node.id = node.parent.id
 
@@ -1372,6 +1382,16 @@ class ArgList0E(SemanticRule):
             node.code.append('param ' + name)
 
 
+class ArgList0C0(SemanticRule):
+    def __rule(self, node):
+        node.fun = node.parent.fun
+
+
+class ArgList0C1(SemanticRule):
+    def __rule(self, node):
+        node.fun = node.parent.fun
+
+
 # 43
 class ArgListFollow0E(SemanticRule):
     def __rule(self, node):
@@ -1383,6 +1403,16 @@ class ArgListFollow0E(SemanticRule):
         node.names.append(node.children[1].name)
         for name in node.children[2].names:
             node.names.append(name)
+
+
+class ArgListFollow0C1(SemanticRule):
+    def __rule(self, node):
+        node.fun = node.parent.fun
+
+
+class ArgListFollow0C2(SemanticRule):
+    def __rule(self, node):
+        node.fun = node.parent.fun
 
 
 class ArgListFollow1E(SemanticRule):
