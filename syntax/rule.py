@@ -46,7 +46,7 @@ class Production:
     """
     产生式
     """
-    def __init__(self, left_type, right_types, rule_key_l, rule_key_r):
+    def __init__(self, left_type, right_types):
         """
         产生式左边
         :param left_type: 产生式左边的符号类型
@@ -62,11 +62,6 @@ class Production:
         self.str = self.left.type + ' ->'
         for i in self.right:
             self.str += ' ' + i.type
-
-        self.rule_key_l = rule_key_l
-        self.rule_key_r = list()
-        for i in rule_key_r:
-            self.rule_key_r.append(i)
 
 
 """

@@ -444,6 +444,27 @@ class SemanticRuleFactory:
         if rule_key == 'Factor2E':
             return Factor2E(node)
 
+        # 40
+        if rule_key == 'IdFactorFollow0E':
+            return IdFactorFollow0E(node)
+        if rule_key == 'IdFactorFollow1E':
+            return IdFactorFollow1E(node)
+
+        # 41
+        if rule_key == 'Args0E':
+            return Args0E(node)
+        if rule_key == 'Args1E':
+            return Args1E(node)
+
+        # 42
+        if rule_key == 'ArgList0E':
+            return ArgList0E(node)
+
+        # 43
+        if rule_key == 'ArgListFollow0E':
+            return ArgListFollow0E(node)
+        if rule_key == 'ArgListFollow1E':
+            return ArgListFollow1E(node)
 
 # S 产生式开始
 # E 产生式结束
