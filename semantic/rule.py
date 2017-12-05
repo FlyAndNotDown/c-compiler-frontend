@@ -161,7 +161,288 @@ class SemanticRuleFactory:
             return DefineType1C0(node)
         if rule_key == 'DefineType1E':
             return DefineType1E
-        # TODO 继续填写
+
+        # 4
+        if rule_key == 'VarDefineFollow0E':
+            return VarDefineFollow0E(node)
+        if rule_key == 'VarDefineFollow1E':
+            return VarDefineFollow1E(node)
+
+        # 5
+        if rule_key == 'Type0S':
+            return Type0S(node)
+        if rule_key == 'Type1S':
+            return Type1S(node)
+
+        # 6
+        if rule_key == 'FunDefineFollow0E':
+            return FunDefineFollow0E(node)
+        if rule_key == 'FunDefineFollow0C1':
+            return FunDefineFollow0C1(node)
+        if rule_key == 'FunDefineFOllow0C3':
+            return FunDefineFollow0C3(node)
+
+        # 7
+        if rule_key == 'Params0S':
+            return Params0S(node)
+        if rule_key == 'Params0C0':
+            return Params0C0(node)
+        if rule_key == 'Params1S':
+            return Params1S(node)
+
+        # 8
+        if rule_key == 'ParamList0C0':
+            return ParamList0C0(node)
+        if rule_key == 'ParamList0C2':
+            return ParamList0C2
+
+        # 9
+        if rule_key == 'ParamFollow0C1':
+            return ParamFollow0C1(node)
+        if rule_key == 'ParamFollow0C2':
+            return ParamList0C2(node)
+
+        # 10
+        if rule_key == 'Param0E':
+            return Param0E(node)
+
+        # 11
+        if rule_key == 'ArraySubscript0S':
+            return ArraySubscript0S(node)
+        if rule_key == 'ArraySubscript1S':
+            return ArraySubscript1S(node)
+
+        # 12
+        if rule_key == 'CodeBlock0E':
+            return CodeBlock0E(node)
+        if rule_key == 'CodeBlock0C1':
+            return CodeBlock0C1(node)
+        if rule_key == 'CodeBlock0C2':
+            return CodeBlock0C2(node)
+
+        # 13
+        if rule_key == 'LocalDefineList0C0':
+            return LocalDefineList0C0(node)
+        if rule_key == 'LocalDefineList0C1':
+            return LocalDefineList0C1(node)
+
+        # 14
+        if rule_key == 'LocalVarDefine0E':
+            return LocalVarDefine0E(node)
+
+        # 15
+        if rule_key == 'CodeList0E':
+            return CodeList0E(node)
+        if rule_key == 'CodeList0C0':
+            return CodeList0C0(node)
+        if rule_key == 'CodeList0C1':
+            return CodeList0C1(node)
+        if rule_key == 'CodeList1E':
+            return CodeList1E(node)
+
+        # 16
+        if rule_key == 'Code0E':
+            return Code0E(node)
+        if rule_key == 'Code0C0':
+            return Code0C0(node)
+        if rule_key == 'Code1E':
+            return Code1E(node)
+        if rule_key == 'Code1C0':
+            return Code1C0(node)
+        if rule_key == 'Code2E':
+            return Code2E(node)
+        if rule_key == 'Code2C0':
+            return Code2C0(node)
+        if rule_key == 'Code3E':
+            return Code3E(node)
+        if rule_key == 'Code3C0':
+            return Code3C0(node)
+
+        # 17
+        if rule_key == 'NormalStatement0E':
+            return NormalStatement0E(node)
+        if rule_key == 'NormalStatement1E':
+            return NormalStatement1E(node)
+        if rule_key == 'NormalStatement1C1':
+            return NormalStatement1C1(node)
+
+        # 18
+        if rule_key == 'NormalStatementFollow0E':
+            return NormalStatementFollow0E(node)
+        if rule_key == 'NormalStatementFollow0C0':
+            return NormalStatementFollow0C0(node)
+        if rule_key == 'NormalStatementFollow0C2':
+            return NormalStatementFollow0C2(node)
+        if rule_key == 'NormalStatementFollow1E':
+            return NormalStatementFollow1E(node)
+        if rule_key == 'NormalStatementFollow1C0':
+            return NormalStatementFollow1C0(node)
+
+        # 19
+        if rule_key == 'CallFollow0E':
+            return CallFollow0E(node)
+        if rule_key == 'CallFollow0C1':
+            return CallFollow0C1(node)
+
+        # 20
+        if rule_key == 'CallParams0E':
+            return CallParams0E(node)
+        if rule_key == 'CallParams0C0':
+            return CallParams0C0(node)
+        if rule_key == 'CallParams1E':
+            return CallParams1E(node)
+
+        # 21
+        if rule_key == 'CallParamList0E':
+            return CallParamList0E(node)
+        if rule_key == 'CallParamList0C0':
+            return CallParamList0C0(node)
+        if rule_key == 'CallParamList0C1':
+            return CallParamList0C1(node)
+
+        # 22
+        if rule_key == 'CallParamFollow0E':
+            return CallParamFollow0E(node)
+        if rule_key == 'CallParamFollow0C1':
+            return CallParamFollow0C1(node)
+        if rule_key == 'CallParamFollow0C2':
+            return CallParamFollow0C2(node)
+        if rule_key == 'CallParamFollow1E':
+            return CallParamFollow1E(node)
+
+        # 23
+        if rule_key == 'SelectionStatement0E':
+            return SelectionStatement0E(node)
+        if rule_key == 'SelectionStatement0C2':
+            return SelectionStatement0C2(node)
+
+        # 24
+        if rule_key == 'SelectionFollow0E':
+            return SelectionFollow0E(node)
+        if rule_key == 'SelectionFollow1E':
+            return SelectionFollow1E(node)
+
+        # 25
+        if rule_key == 'IterationStatement0E':
+            return IterationStatement0E(node)
+        if rule_key == 'IterationStatement0C2':
+            return IterationStatement0C2(node)
+
+        # 26
+        if rule_key == 'IterationFollow0E':
+            return IterationFollow0E(node)
+        if rule_key == 'IterationFollow1E':
+            return IterationFollow1E(node)
+
+        # 27
+        if rule_key == 'ReturnStatement0E':
+            return ReturnStatement0E(node)
+        if rule_key == 'ReturnStatement0C1':
+            return ReturnStatement0C1(node)
+
+        # 28
+        if rule_key == 'ReturnFollow0E':
+            return ReturnFollow0E(node)
+        if rule_key == 'ReturnFollow1E':
+            return ReturnFollow1E(node)
+        if rule_key == 'ReturnFollow1C0':
+            return ReturnFollow1C0(node)
+
+        # 29
+        if rule_key == 'VarFollow0E':
+            return VarFollow0E(node)
+        if rule_key == 'VarFollow0C1':
+            return VarFollow0C1(node)
+        if rule_key == 'VarFollow1E':
+            return VarFollow1E(node)
+
+        # 30
+        if rule_key == 'Expression0E':
+            return Expression0E(node)
+        if rule_key == 'Expression0C0':
+            return Expression0C0(node)
+        if rule_key == 'Expression0C1':
+            return Expression0C1(node)
+
+        # 31
+        if rule_key == 'ExpressionFollow0E':
+            return ExpressionFollow0E(node)
+        if rule_key == 'ExpressionFollow0C1':
+            return ExpressionFollow0C1(node)
+        if rule_key == 'ExpressionFollow1E':
+            return ExpressionFollow1E(node)
+
+        # 32
+        if rule_key == 'RelOp0E':
+            return RelOp0E(node)
+        if rule_key == 'RelOp1E':
+            return RelOp1E(node)
+        if rule_key == 'RelOp2E':
+            return RelOp2E(node)
+        if rule_key == 'RelOp3E':
+            return RelOp3E(node)
+        if rule_key == 'RelOp4E':
+            return RelOp4E(node)
+        if rule_key == 'RelOp5E':
+            return RelOp5E(node)
+
+        # 33
+        if rule_key == 'AdditiveExpr0E':
+            return AdditiveExpr0E(node)
+        if rule_key == 'AdditiveExpr0C0':
+            return AdditiveExpr0C0(node)
+        if rule_key == 'AdditiveExpr0C1':
+            return AdditiveExpr0C1(node)
+
+        # 34
+        if rule_key == 'AdditiveExprFollow0E':
+            return AdditiveExprFollow0E(node)
+        if rule_key == 'AdditiveExprFollow0C1':
+            return AdditiveExprFollow0C1(node)
+        if rule_key == 'AdditiveExprFollow0C2':
+            return AdditiveExprFollow0C2(node)
+        if rule_key == 'AdditiveExprFollow1E':
+            return AdditiveExprFollow1E(node)
+
+        # 35
+        if rule_key == 'AddOp0E':
+            return AddOp0E(node)
+        if rule_key == 'AddOp1E':
+            return AddOp1E(node)
+
+        # 36
+        if rule_key == 'Term0E':
+            return Term0E(node)
+        if rule_key == 'Term0C0':
+            return Term0C0(node)
+        if rule_key == 'Term0C1':
+            return Term0C1(node)
+
+        # 37
+        if rule_key == 'TermFollow0E':
+            return TermFollow0E(node)
+        if rule_key == 'TermFollow0C1':
+            return TermFollow0C1(node)
+        if rule_key == 'TermFollow0C2':
+            return TermFollow0C2(node)
+
+        # 38
+        if rule_key == 'MulOp0E':
+            return MulOp0E(node)
+        if rule_key == 'MulOp1E':
+            return MulOp1E(node)
+
+        # 39
+        if rule_key == 'Factor0E':
+            return Factor0E(node)
+        if rule_key == 'Factor0C1':
+            return Factor0C1(node)
+        if rule_key == 'Factor1E':
+            return Factor1E(node)
+        if rule_key == 'Factor1C1':
+            return Factor1C1(node)
+        if rule_key == 'Factor2E':
+            return Factor2E(node)
 
 
 # S 产生式开始
@@ -309,12 +590,12 @@ class Params0S(SemanticRule):
         )
 
 
-class Param0C0(SemanticRule):
+class Params0C0(SemanticRule):
     def __rule(self, node):
         node.id = node.parent.id
 
 
-class Param1S(SemanticRule):
+class Params1S(SemanticRule):
     def __rule(self, node):
         symbol_table_pool.append(
             LocalVarTable(node.id, symbol_table_pool.global_var_table)
@@ -574,7 +855,7 @@ class CallParams0E(SemanticRule):
                 node.code.append(c)
 
 
-class CallParam0C0(SemanticRule):
+class CallParams0C0(SemanticRule):
     def __rule(self, node):
         node.fun = node.parent.fun
 
