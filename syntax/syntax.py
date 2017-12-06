@@ -711,6 +711,7 @@ class Syntax:
                         # 将语法树按照产生式进行生长
                         for i in range(0, len(production.right)):
                             stack.top().children.append(Node(Sign(production.right[i].type)))
+                            stack.top().children[i].parent = stack.top()
 
                         # 将 top 出栈
                         top = stack.pop()

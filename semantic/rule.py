@@ -10,16 +10,16 @@ from semantic.code import get_temp_block_name, get_temp_var_name
                 {code} | empty
 2.  define{code} -> type ID define-type{type id}
 3.  define-type{code .enter} ->{.judge} var-define-follow{type id}
-                {code} |{.judge} fun-define-follow{return_type fun}
+                {code} |{.judge} fun-define-follow{type fun}
 4.  var-define-follow{type} -> ;
                 {type length} | [ NUM ] ;
 5.  type ->{type}   int
          |{type} void
-6.  fun-define-follow{code} -> ( params{return_type fun} ) code-block{fun}
-7.  params{.create} -> param-list{id}
+6.  fun-define-follow{code} -> ( params{type fun} ) code-block{fun}
+7.  params{.create} -> param-list{fun}
                {.create} | empty
-8.  param-list -> param{id} param-follow{id}
-9. param-follow -> , param{id} param-follow{id}
+8.  param-list -> param{fun} param-follow{fun}
+9. param-follow -> , param{fun} param-follow{fun}
                 | empty
 10. param -> type ID array-subscript
 11. array-subscript{type} -> [ ]
@@ -592,7 +592,7 @@ class DefineType1C0(SemanticRule):
         self.__rule(self.node)
 
     def __rule(self, node):
-        node.return_type = node.parent.type
+        node.type = node.parent.type
         node.fun = node.parent.id
 
 
@@ -655,8 +655,8 @@ class FunDefineFollow0C1(SemanticRule):
         self.__rule(self.node)
 
     def __rule(self, node):
-        node.return_type = node.parent.return_type
-        node.id = node.parent.id
+        node.type = node.parent.type
+        node.fun = node.parent.fun
 
 
 class FunDefineFollow0C3(SemanticRule):
@@ -674,10 +674,10 @@ class Params0S(SemanticRule):
 
     def __rule(self, node):
         symbol_table_pool.append(
-            LocalVarTable(node.id, symbol_table_pool.global_var_table)
+            LocalVarTable(node.fun, symbol_table_pool.global_var_table)
         )
         symbol_table_pool.fun_table.append(
-            Fun(node.id, node.return_type, symbol_table_pool.query(node.id))
+            Fun(node.fun, node.type, symbol_table_pool.query(node.fun))
         )
 
 
@@ -686,7 +686,7 @@ class Params0C0(SemanticRule):
         self.__rule(self.node)
 
     def __rule(self, node):
-        node.id = node.parent.id
+        node.fun = node.parent.fun
 
 
 class Params1S(SemanticRule):
@@ -695,10 +695,10 @@ class Params1S(SemanticRule):
 
     def __rule(self, node):
         symbol_table_pool.append(
-            LocalVarTable(node.id, symbol_table_pool.global_var_table)
+            LocalVarTable(node.fun, symbol_table_pool.global_var_table)
         )
         symbol_table_pool.fun_table.append(
-            Fun(node.id, node.return_type, symbol_table_pool.query(node.id))
+            Fun(node.fun, node.type, symbol_table_pool.query(node.fun))
         )
 
 
@@ -708,7 +708,7 @@ class ParamList0C0(SemanticRule):
         self.__rule(self.node)
 
     def __rule(self, node):
-        node.id = node.parent.id
+        node.fun = node.parent.fun
 
 
 class ParamList0C1(SemanticRule):
@@ -716,7 +716,7 @@ class ParamList0C1(SemanticRule):
         self.__rule(self.node)
 
     def __rule(self, node):
-        node.id = node.parent.id
+        node.fun = node.parent.fun
 
 
 # 9
@@ -725,7 +725,7 @@ class ParamFollow0C1(SemanticRule):
         self.__rule(self.node)
 
     def __rule(self, node):
-        node.id = node.parent.id
+        node.fun = node.parent.fun
 
 
 class ParamFollow0C2(SemanticRule):
@@ -733,7 +733,7 @@ class ParamFollow0C2(SemanticRule):
         self.__rule(self.node)
 
     def __rule(self, node):
-        node.id = node.parent.id
+        node.fun = node.parent.fun
 
 
 # 10
@@ -747,15 +747,15 @@ class Param0E(SemanticRule):
             self.errors.append(SemanticError('参数' + node.children[1].lexical + '不能定义为void类型'))
         if node.children[0].type == 'int':
             # 判断是否重定义
-            if symbol_table_pool.query(node.id).exist(node.children[1].lexical):
+            if symbol_table_pool.query(node.fun).exist(node.children[1].lexical):
                 self.errors.append(SemanticError('参数' + node.children[1].lexical + '重定义'))
             else:
                 if node.children[2].type == 'array':
-                    symbol_table_pool.query(node.id).append(
+                    symbol_table_pool.query(node.fun).append(
                         LocalVar(node.children[1].lexical, 'address', 4, True)
                     )
                 if node.children[2].type == 'var':
-                    symbol_table_pool.query(node.id).append(
+                    symbol_table_pool.query(node.fun).append(
                         LocalVar(node.children[1].lexical, 'int', 4, True)
                     )
 

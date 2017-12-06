@@ -11,7 +11,7 @@ class SymbolTable:
     符号表
     """
     def __init__(self):
-        self.__table = list()
+        self._table = list()
 
     def exist(self, name):
         """
@@ -19,7 +19,7 @@ class SymbolTable:
         :param name:
         :return: True/False
         """
-        for s in self.__table:
+        for s in self._table:
             if s.name == name:
                 return True
         return False
@@ -30,7 +30,7 @@ class SymbolTable:
         :param name: 名字
         :return: 符号
         """
-        for symbol in self.__table:
+        for symbol in self._table:
             if symbol.name == name:
                 return symbol
         return None
@@ -47,7 +47,7 @@ class SymbolTable:
         获取符号总数
         :return: 符号总数
         """
-        return len(self.__table)
+        return len(self._table)
 
     def get(self, index):
         """
@@ -55,7 +55,7 @@ class SymbolTable:
         :param index: 索引
         :return: 符号
         """
-        return self.__table[index]
+        return self._table[index]
 
 
 class SymbolTablePool:
@@ -114,9 +114,9 @@ class GlobalVarTable(SymbolTable):
         添加符号
         :param symbol: 符号
         """
-        self.__table.append(symbol)
-        self.__table[-1].offset = self.__width
-        self.__width += self.__table[-1].width
+        self._table.append(symbol)
+        self._table[-1].offset = self.__width
+        self.__width += self._table[-1].width
 
 
 class GlobalVar(Symbol):
@@ -155,9 +155,9 @@ class LocalVarTable(SymbolTable):
         填入新符号
         :param symbol:
         """
-        self.__table.append(symbol)
-        self.__table[-1].offset = self.__width
-        self.__width += self.__table[-1].offset
+        self._table.append(symbol)
+        self._table[-1].offset = self.__width
+        self.__width += self._table[-1].offset
 
     def exist(self, name):
         """
@@ -168,7 +168,7 @@ class LocalVarTable(SymbolTable):
         if self.outer.exist(name):
             return True
         else:
-            for symbol in self.__table:
+            for symbol in self._table:
                 if symbol.name == name:
                     return True
             return False
@@ -179,7 +179,7 @@ class LocalVarTable(SymbolTable):
         :return: 参数个数
         """
         num = 0
-        for symbol in self.__table:
+        for symbol in self._table:
             if symbol.is_param:
                 num += 1
         return num
@@ -190,7 +190,7 @@ class LocalVarTable(SymbolTable):
         :return: 参数列表
         """
         params = list()
-        for symbol in self.__table:
+        for symbol in self._table:
             if symbol.is_param:
                 params.append(symbol)
         return params
@@ -229,7 +229,7 @@ class FunTable(SymbolTable):
         填入一个新的函数
         :param symbol: 函数
         """
-        self.__table.append(symbol)
+        self._table.append(symbol)
 
 
 class Fun(Symbol):
