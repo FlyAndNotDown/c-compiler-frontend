@@ -44,12 +44,12 @@ from semantic.code import get_temp_block_name, get_temp_var_name
 21. call-param-list{num code} -> expression{fun} call-param-follow{fun}
 22. call-param-follow{num code names} -> , expression{fun} call-param-follow{fun}
                 | empty
-23. selection-statement{code} -> if ( expression{fun} ) { code-list } selection-follow
-24. selection-follow{code} -> else { code-list }
+23. selection-statement{code} -> if ( expression{fun} ) { code-list{fun} } selection-follow{fun}
+24. selection-follow{code} -> else { code-list{fun} }
                {code} | empty
-25. iteration-statement -> while ( expression{fun} ) iteration-follow
-26. iteration-follow{code} -> { code-list }
-               {code} | code
+25. iteration-statement -> while ( expression{fun} ) iteration-follow{fun}
+26. iteration-follow{code} -> { code-list{fun} }
+               {code} | code{fun}
 27. return-statement{code} -> return return-follow{fun}
 28. return-follow -> ;
                 | expression{fun} ;
@@ -57,7 +57,7 @@ from semantic.code import get_temp_block_name, get_temp_var_name
                {type} | empty
 30. expression{code name bool} -> additive-expr{fun} expression-follow{fun}
 31. expression-follow{bool code op name} -> rel-op additive-expr{fun}
-               {bool} | empty
+               {bool} | empty   
 32. rel-op{op} -> <=
                 | <
                 | >
@@ -78,11 +78,11 @@ from semantic.code import get_temp_block_name, get_temp_var_name
                 | ID id-factor-follow{id fun}
                 | NUM
 40. id-factor-follow -> var-follow{fun}
-                | ( args )
-41. args{code num} -> arg-list
+                | ( args{fun} )
+41. args{code num} -> arg-list{fun}
                 | empty
-42. arg-list{code num} -> expression arg-list-follow
-43. arg-list-follow{code num names} -> , expression arg-list-follow
+42. arg-list{code num} -> expression{fun} arg-list-follow{fun}
+43. arg-list-follow{code num names} -> , expression{fun} arg-list-follow{fun}
                 | empty
 """
 
@@ -315,10 +315,16 @@ class SemanticRuleFactory:
             return SelectionStatement0E(node)
         if rule_key == 'SelectionStatement0C2':
             return SelectionStatement0C2(node)
+        if rule_key == 'SelectionStatement0C5':
+            return SelectionStatement0C5(node)
+        if rule_key == 'SelectionStatement0C7':
+            return SelectionStatement0C7(node)
 
         # 24
         if rule_key == 'SelectionFollow0E':
             return SelectionFollow0E(node)
+        if rule_key == 'SelectionFollow0C2':
+            return SelectionFollow0C2(node)
         if rule_key == 'SelectionFollow1E':
             return SelectionFollow1E(node)
 
@@ -327,12 +333,18 @@ class SemanticRuleFactory:
             return IterationStatement0E(node)
         if rule_key == 'IterationStatement0C2':
             return IterationStatement0C2(node)
+        if rule_key == 'IterationStatement0C4':
+            return IterationStatement0C4(node)
 
         # 26
         if rule_key == 'IterationFollow0E':
             return IterationFollow0E(node)
+        if rule_key == 'IterationFollow0C1':
+            return IterationFollow0C1(node)
         if rule_key == 'IterationFollow1E':
             return IterationFollow1E(node)
+        if rule_key == 'IterationFollow1C0':
+            return IterationFollow1C0(node)
 
         # 27
         if rule_key == 'ReturnStatement0E':
@@ -449,10 +461,14 @@ class SemanticRuleFactory:
             return IdFactorFollow0E(node)
         if rule_key == 'IdFactorFollow1E':
             return IdFactorFollow1E(node)
+        if rule_key == 'IdFactorFollow1C1':
+            return IdFactorFollow1C1(node)
 
         # 41
         if rule_key == 'Args0E':
             return Args0E(node)
+        if rule_key == 'Args0C0':
+            return Args0C0(node)
         if rule_key == 'Args1E':
             return Args1E(node)
 
@@ -783,7 +799,7 @@ class CodeBlock0E(SemanticRule):
         self.__rule(self.node)
 
     def __rule(self, node):
-        node.code.append(node.id + ':')
+        node.code.append(node.fun + ':')
         for c in node.children[2].code:
             node.code.append(c)
 
@@ -1185,6 +1201,22 @@ class SelectionStatement0C2(SemanticRule):
         node.fun = node.parent.fun
 
 
+class SelectionStatement0C5(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
+    def __rule(self, node):
+        node.fun = node.parent.fun
+
+
+class SelectionStatement0C7(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
+    def __rule(self, node):
+        node.fun = node.parent.fun
+
+
 # 24
 class SelectionFollow0E(SemanticRule):
     def execute(self):
@@ -1193,6 +1225,14 @@ class SelectionFollow0E(SemanticRule):
     def __rule(self, node):
         for c in node.children[2].code:
             node.code.append(c)
+
+
+class SelectionFollow0C2(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
+    def __rule(self, node):
+        node.fun = node.parent.fun
 
 
 class SelectionFollow1E(SemanticRule):
@@ -1232,6 +1272,14 @@ class IterationStatement0C2(SemanticRule):
         node.fun = node.parent.fun
 
 
+class IterationStatement0C4(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
+    def __rule(self, node):
+        node.fun = node.parent.fun
+
+
 # 26
 class IterationFollow0E(SemanticRule):
     def execute(self):
@@ -1242,6 +1290,14 @@ class IterationFollow0E(SemanticRule):
             node.code.append(c)
 
 
+class IterationFollow0C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
+    def __rule(self, node):
+        node.fun = node.parent.fun
+
+
 class IterationFollow1E(SemanticRule):
     def execute(self):
         self.__rule(self.node)
@@ -1249,6 +1305,14 @@ class IterationFollow1E(SemanticRule):
     def __rule(self, node):
         for c in node.children[0].code:
             node.code.append(c)
+
+
+class IterationFollow1C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
+    def __rule(self, node):
+        node.fun = node.parent.fun
 
 
 # 27
@@ -1368,7 +1432,7 @@ class ExpressionFollow0E(SemanticRule):
 
     def __rule(self, node):
         node.bool = True
-        node.op = node.children[0].lexical
+        node.op = node.children[0].op
         node.name = node.children[1].name
         for c in node.children[1].code:
             node.code.append(c)
@@ -1705,11 +1769,19 @@ class IdFactorFollow1E(SemanticRule):
             else:
                 for c in node.children[1].code:
                     node.code.append(c)
-                node.code.append('call ' + node.id + ', ' + symbol_table_pool.query(node.fun).get_params_num())
+                node.code.append('call ' + node.id + ', ' + str(symbol_table_pool.query(node.fun).get_params_num()))
                 node.name = get_temp_var_name()
                 node.code.append(node.name + ' := ' + 'result')
         else:
             self.errors.append('函数' + node.id + '未定义')
+
+
+class IdFactorFollow1C1(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
+    def __rule(self, node):
+        node.fun = node.parent.fun
 
 
 # 41
@@ -1721,6 +1793,14 @@ class Args0E(SemanticRule):
         for c in node.children[0].code:
             node.code.append(c)
         node.num = node.children[0].num
+
+
+class Args0C0(SemanticRule):
+    def execute(self):
+        self.__rule(self.node)
+
+    def __rule(self, node):
+        node.fun = node.parent.fun
 
 
 class Args1E(SemanticRule):

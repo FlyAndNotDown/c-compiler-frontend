@@ -724,11 +724,11 @@ class Syntax:
                         # 将 top 的孩子节点反序入栈
                         for i in range(len(production.right) - 1, -1, -1):
                             # for child in top.children[::-1]:
+                            stack.push(top.children[i])
                             semantic_child = SemanticRuleFactory.get_instance(production.semantic_children[i],
                                                                               top.children[i])
                             if semantic_child:
                                 stack.push(semantic_child)
-                            stack.push(top.children[i])
                     # 如果分析表中存放着错误信息
                     else:
                         self.__error = SyntaxError('语法错误 ' + inputs[input_index].str, inputs[input_index].line)

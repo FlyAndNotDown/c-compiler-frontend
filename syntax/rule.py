@@ -297,7 +297,7 @@ productions = [
                None, [None, 'CodeBlock0C1', 'CodeBlock0C2', None], 'CodeBlock0E'),
     # 13
     Production('local-define-list', ['local-var-define', 'local-define-list'],
-               None, ['LocalVarDefine0C0', 'LocalVarDefineFollow0C1'], None),
+               None, ['LocalDefineList0C0', 'LocalDefineList0C1'], None),
     Production('local-define-list', [],
                None, [], None),
     # 14
@@ -349,21 +349,22 @@ productions = [
     Production('selection-statement',
                ['if', 'left-parentheses', 'expression', 'right-parentheses', 'left-brace',
                 'code-list', 'right-brace', 'selection-follow'],
-               None, [None, None, 'SelectionStatement0C2', None, None, None, None, None], 'SelectionStatement0E'),
+               None, [None, None, 'SelectionStatement0C2', None, None, 'SelectionStatement0C5',
+                      None, 'SelectionStatement0C5'], 'SelectionStatement0E'),
     # 24
     Production('selection-follow', ['else', 'left-brace', 'code-list', 'right-brace'],
-               None, [None, None, None, None], 'SelectionFollow0E'),
+               None, [None, None, 'SelectionFollow0C2', None], 'SelectionFollow0E'),
     Production('selection-follow', [],
                None, [], 'SelectionFollow1E'),
     # 25
     Production('iteration-statement', ['while', 'left-parentheses', 'expression',
                                        'right-parentheses', 'iteration-follow'],
-               None, [None, None, 'IterationStatement0C2', None, None], 'IterationStatement0E'),
+               None, [None, None, 'IterationStatement0C2', None, 'IterationStatement0C4'], 'IterationStatement0E'),
     # 26
     Production('iteration-follow', ['left-brace', 'code-list', 'right-brace'],
-               None, [None, None, None], 'IterationFollow0E'),
+               None, [None, 'IterationFollow0C1', None], 'IterationFollow0E'),
     Production('iteration-follow', ['code'],
-               None, [None], 'IterationFollow1E'),
+               None, ['IterationFollow1C0'], 'IterationFollow1E'),
     # 27
     Production('return-statement', ['return', 'return-follow'],
                None, [None, 'ReturnStatement0C1'], 'ReturnStatement0E'),
@@ -437,10 +438,10 @@ productions = [
     Production('id-factor-follow', ['var-follow'],
                None, [None], 'IdFactorFollow0E'),
     Production('id-factor-follow', ['left-parentheses', 'args', 'right-parentheses'],
-               None, [None, None, None], 'IdFactorFollow1E'),
+               None, [None, 'IdFactorFollow1C1', None], 'IdFactorFollow1E'),
     # 41
     Production('args', ['arg-list'],
-               None, [None], 'Args0E'),
+               None, ['Args0C0'], 'Args0E'),
     Production('args', [],
                None, [], 'Args1E'),
     # 42
