@@ -77,12 +77,24 @@ class SymbolTablePool:
         self.global_var_table = GlobalVarTable()
         self.local_var_tables = list()
         self.fun_table = FunTable()
-        self.fun_table.append(
-            Fun('input', 'int', None)
+
+        # 添加 output 和 input 的支持
+        self.local_var_tables.append(
+            LocalVarTable('input', self.global_var_table)
+        )
+        self.local_var_tables.append(
+            LocalVarTable('output', self.global_var_table)
+        )
+        self.query('output').append(
+            LocalVar('num', 'int', 4, True)
         )
         self.fun_table.append(
-            Fun('output', 'void', None)
+            Fun('input', 'int', self.query('input'))
         )
+        self.fun_table.append(
+            Fun('output', 'void', self.query('output'))
+        )
+
 
     def query(self, local_var_table_name):
         """

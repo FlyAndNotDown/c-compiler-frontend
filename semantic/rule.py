@@ -1032,7 +1032,7 @@ class NormalStatementFollow1E(SemanticRule):
     def __rule(self, node):
         for c in node.children[0].code:
             node.code.append(c)
-        node.code.append('call ' + node.id + ', ' + symbol_table_pool.query(node.fun).get_params_num())
+        node.code.append('call ' + node.id + ', ' + str(symbol_table_pool.query(node.id).get_params_num()))
 
 
 class NormalStatementFollow1C0(SemanticRule):
@@ -1069,7 +1069,7 @@ class CallParams0E(SemanticRule):
         self.__rule(self.node)
 
     def __rule(self, node):
-        if symbol_table_pool.query(node.fun).get_params_num() != node.children[0].num:
+        if symbol_table_pool.query(node.id).get_params_num() != node.children[0].num:
             self.errors.append(SemanticError('函数体' + node.fun + '调用' + node.id + '的时候，参数数量不匹配'))
         else:
             for c in node.children[0].code:
@@ -1764,7 +1764,7 @@ class IdFactorFollow1E(SemanticRule):
 
     def __rule(self, node):
         if symbol_table_pool.fun_table.exist(node.id):
-            if node.children[1].num != symbol_table_pool.query(node.fun).get_params_num():
+            if node.children[1].num != symbol_table_pool.query(node.id).get_params_num():
                 self.errors.append('调用函数' + node.id + '的时候参数数量不匹配')
             else:
                 for c in node.children[1].code:

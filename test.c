@@ -14,4 +14,5 @@ void main() {
     x = input();
     y = input();
     output(gcd(x, y));
+    return;
 }

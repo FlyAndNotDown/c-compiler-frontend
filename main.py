@@ -25,9 +25,12 @@ if lexical_success:
     syntax = Syntax()
     syntax.put_source(lexical_result)
     syntax_success = syntax.execute()
-    print('语法分析是否成功\t', syntax_success)
+    print('语法分析和语义分析是否成功\t', syntax_success)
     if syntax_success:
-        print('语法分析结果:')
+        print()
+        print('语义分析结果:\t')
+        for code in syntax.get_result().root.code:
+            print(code)
     else:
         print('错误原因:\t', syntax.get_error().info, syntax.get_error().line, '行')
 else:

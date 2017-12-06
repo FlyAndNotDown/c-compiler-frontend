@@ -755,4 +755,5 @@ class Syntax:
         if self.__error:
             return False
         else:
+            self.__grammar_tree = grammar_tree
             return True
