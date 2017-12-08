@@ -29,8 +29,11 @@ if lexical_success:
     if syntax_success:
         print()
         print('语义分析结果:\t')
+        print('三地址代码:\t')
+        i = -1
         for code in syntax.get_result().root.code:
-            print(code)
+            i += 1
+            print(i, '  \t', code)
     else:
         print('错误原因:\t', syntax.get_error().info, syntax.get_error().line, '行')
 else:
