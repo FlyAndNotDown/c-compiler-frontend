@@ -1,6 +1,6 @@
 class Sign:
     """
-    终结符和非终结符的基类
+    符号
     """
     def __init__(self, sign_type, sign_str='', sign_line=-1):
         """
