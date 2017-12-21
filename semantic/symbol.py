@@ -3,6 +3,10 @@ class Symbol:
     符号基类
     """
     def __init__(self, name):
+        """
+        构造
+        :param name: 符号名
+        """
         self.name = name
 
 
@@ -11,6 +15,9 @@ class SymbolTable:
     符号表
     """
     def __init__(self):
+        """
+        构造
+        """
         self._table = list()
 
     def exist(self, name):
@@ -94,7 +101,6 @@ class SymbolTablePool:
         self.fun_table.append(
             Fun('output', 'void', self.query('output'))
         )
-
 
     def query(self, local_var_table_name):
         """
@@ -255,6 +261,12 @@ class Fun(Symbol):
     函数
     """
     def __init__(self, name, return_type, local_var_table):
+        """
+        构造
+        :param name: 函数名
+        :param return_type: 返回类型
+        :param local_var_table: 对应的局部变量表
+        """
         super().__init__(name)
         self.param_types = list()
         self.return_type = return_type

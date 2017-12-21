@@ -130,6 +130,12 @@ class SemanticRuleFactory:
     """
     @classmethod
     def get_instance(cls, rule_key, node):
+        """
+        获取语义规则实例
+        :param rule_key: 关键字
+        :param node: 目标节点
+        :return: 实例
+        """
         # 0
         if rule_key == 'Program0S':
             return Program0S(node)
