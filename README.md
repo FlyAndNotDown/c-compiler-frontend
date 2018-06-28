@@ -20,4 +20,4 @@ git clone https://github.com/FlyAndNotDown/CSub-CompilerFrontend.git
 另外，三大分析中 rule.py 即是支持编译器的所有文法、词法、语义规则，加以改动即可面向一些其他的文法和语言使用
 
 ## 关于
-作者：黄文麒及室友s
+NUAA 161520311 John Kindem
